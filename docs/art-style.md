@@ -46,8 +46,9 @@ blue shadow, warm reflected light, timber, and dark evergreen contrast.
 ## Camera And Isometric Geometry
 
 - Use a fixed 2:1 isometric projection.
-- The logical tile diamond is `128 x 64` pixels at 1x world scale.
-- A half tile is `64 x 32`; use half-tile increments for prop placement.
+- The logical tile diamond is `96 x 48` pixels at 1x world scale, matching the
+  foundation `ISO_GRID` contract.
+- A half tile is `48 x 24`; use half-tile increments for prop placement.
 - The camera is orthographic. Do not add perspective convergence to environment
   edges.
 - Vertical world lines remain vertical on screen.
