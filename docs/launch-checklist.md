@@ -5,8 +5,8 @@
 - [x] Dependencies install from the lockfile.
 - [x] `pnpm build` succeeds inside Docker.
 - [x] Development server responds at `http://localhost:5173`.
-- [ ] Baseline files are committed to `main`.
+- [x] Baseline files are committed to `main`.
 - [x] GitHub `origin` is configured.
-- [ ] Baseline commit is pushed to GitHub.
+- [x] Baseline commit is pushed to GitHub.
 - [x] Agent branch names are available.
 - [x] Agent 13 integration workflow is ready.
