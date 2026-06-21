@@ -18,8 +18,10 @@ export const GAME_COLORS = {
 } as const;
 
 export const ISO_GRID = {
-	tileWidth: 96,
-	tileHeight: 48
+	tileWidth: 128,
+	tileHeight: 64,
+	halfTileWidth: 64,
+	halfTileHeight: 32
 } as const;
 
 export const WORLD_BOUNDS = {
@@ -30,11 +32,15 @@ export const WORLD_BOUNDS = {
 } as const;
 
 export const DEPTH_LAYERS = {
-	ground: 0,
-	world: 100,
+	ground: -10_000,
+	world: 0,
 	effects: 100_000,
 	ui: 200_000
 } as const;
+
+export function worldDepthFromBaseY(baseY: number): number {
+	return DEPTH_LAYERS.world + baseY;
+}
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
