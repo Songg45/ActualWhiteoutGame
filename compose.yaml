@@ -1,0 +1,16 @@
+services:
+  game:
+    build:
+      context: .
+      target: development
+    ports:
+      - "5173:5173"
+    init: true
+
+  verify:
+    build:
+      context: .
+      target: build
+    profiles:
+      - tools
+    command: ["true"]
