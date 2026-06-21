@@ -34,6 +34,27 @@ Each implementation agent owns one branch and one draft pull request. Agents pus
 8. Record shared-contract changes in the PR and `docs/integration-log.md`.
 9. Do not merge your own implementation PR.
 
+## Usage And Graceful Shutdown
+
+Every agent must actively protect unfinished work as its available context or usage budget decreases.
+
+- Check available usage at the start of work and after each milestone when the runtime exposes it.
+- Push a tested checkpoint after every meaningful milestone; never keep several completed milestones only in a local worktree.
+- At approximately 30% remaining, reduce scope to the current acceptance criterion and defer optional polish.
+- At approximately 20% remaining, stop starting new features and prepare the branch for handoff.
+- At 10% remaining or lower, immediately enter shutdown mode:
+  1. Stop implementation.
+  2. Run the fastest relevant typecheck/build/test that fits the remaining budget.
+  3. Commit all coherent work. Do not commit secrets, generated caches, or known-destructive changes.
+  4. Push the assigned branch.
+  5. Update the draft PR with completed work, failing checks, unfinished files, and the exact next step.
+  6. Add a concise handoff entry to `docs/integration-log.md` when the branch changed a shared contract.
+  7. Exit cleanly with the commit SHA, branch, PR URL, test result, and remaining work.
+- If exact usage percentages are unavailable, agents must use elapsed scope and context pressure conservatively and checkpoint more often.
+- An agent must never sacrifice a pushable checkpoint to pursue one more feature.
+
+The coordinator tracks agent status, commits, PRs, and handoffs. A replacement agent should resume from the pushed branch and PR rather than reconstructing unpushed work.
+
 ## Commit Guidance
 
 Good examples:
@@ -57,6 +78,8 @@ Every PR must state:
 - screenshots or recordings for visible changes
 - shared contracts changed
 - integration risks
+- latest checkpoint commit
+- graceful-shutdown or replacement-agent notes, when applicable
 
 ## Review Policy
 

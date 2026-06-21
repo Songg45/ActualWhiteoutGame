@@ -10,3 +10,4 @@
 - [x] Baseline commit is pushed to GitHub.
 - [x] Agent branch names are available.
 - [x] Agent 13 integration workflow is ready.
+- [x] Agent usage and graceful-shutdown protocol is documented.
