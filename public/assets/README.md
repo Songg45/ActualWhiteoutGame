@@ -21,3 +21,10 @@ filenames by scanning directories.
 See `docs/art-style.md` for geometry, export, naming, originality, and replacement
 rules.
 
+Validate the manifest and checked-in PNG files with:
+
+```text
+node scripts/validate-assets.mjs
+node --test tests/assets-manifest.test.mjs
+```
+

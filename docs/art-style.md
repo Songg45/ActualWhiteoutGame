@@ -46,9 +46,9 @@ blue shadow, warm reflected light, timber, and dark evergreen contrast.
 ## Camera And Isometric Geometry
 
 - Use a fixed 2:1 isometric projection.
-- The logical tile diamond is `96 x 48` pixels at 1x world scale, matching the
+- The logical tile diamond is `128 x 64` pixels at 1x world scale, matching the
   foundation `ISO_GRID` contract.
-- A half tile is `48 x 24`; use half-tile increments for prop placement.
+- A half tile is `64 x 32`; use half-tile increments for prop placement.
 - The camera is orthographic. Do not add perspective convergence to environment
   edges.
 - Vertical world lines remain vertical on screen.
@@ -64,14 +64,21 @@ logical world coordinate.
 
 - Characters: base point is centered between the feet.
 - Trees: base point is centered at the trunk's ground contact.
-- Buildings: base point is centered on the back-most walkable footprint edge
-  unless the manifest entry documents an override.
+- Buildings: project the complete ground footprint, then use its screen-lowest
+  ground-contact point. For a diamond footprint this is the front/lower vertex.
+  If the projected footprint ends in a horizontal lower edge, use that edge's
+  midpoint. This point is independent of the building's facing direction.
 - Fences: base point is centered on the segment's ground contact line.
 - Pickups: base point is centered under the lowest item in the stack.
 - Effects that live in world space use the impact/contact point as their origin.
 
 Use `container.setDepth(baseY)` for world sorting. Tall art must extend upward
 from the base point and must not change depth according to its image center.
+For an orientation variant, rotate/project the footprint first and then apply the
+same lowest-point rule. Every orientation must place its exported origin on that
+resolved point. Runtime `baseY` is the screen-space Y of this point, so two
+overlapping structures sort by their front-most ground contact rather than their
+image centers or back footprint edges.
 
 Each manifest entry records:
 
@@ -180,6 +187,20 @@ filenames; version source files outside `public/` instead.
 - Keep each individual prototype sprite below 250 KB where practical.
 - Sprite sheets may be introduced later, but individual source frames remain the
   canonical replaceable units until the animation contract is stable.
+
+## Automated Validation
+
+Run both checks before an art checkpoint:
+
+```text
+node scripts/validate-assets.mjs
+node --test tests/assets-manifest.test.mjs
+```
+
+The validator checks required fields, allowed statuses, normalized origins,
+positive integer dimensions, unique IDs and paths, safe PNG paths, provenance
+rules, PNG signatures, and declared dimensions for every asset whose status is
+not `needed`.
 
 ## Replacement Rules
 

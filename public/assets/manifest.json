@@ -4,8 +4,8 @@
   "basePath": "/assets/",
   "projection": {
     "type": "isometric-2-to-1",
-    "tileWidth": 96,
-    "tileHeight": 48,
+    "tileWidth": 128,
+    "tileHeight": 64,
     "depthRule": "base-y"
   },
   "statusValues": [
