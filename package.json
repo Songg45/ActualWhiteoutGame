@@ -6,7 +6,10 @@
 	"packageManager": "pnpm@10.15.1",
 	"scripts": {
 		"dev": "vite --host 0.0.0.0",
-		"test": "vitest run",
+		"test": "pnpm test:unit && pnpm test:assets && pnpm assets:validate",
+		"test:unit": "vitest run src",
+		"test:assets": "node --test tests/assets-manifest.test.mjs",
+		"assets:validate": "node scripts/validate-assets.mjs",
 		"typecheck": "tsc --noEmit",
 		"build": "pnpm typecheck && vite build",
 		"preview": "vite preview --host 0.0.0.0"
