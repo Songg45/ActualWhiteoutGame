@@ -40,13 +40,16 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
 
 - Branch: `codex/iso-map`
 - PR: #4
-- Reviewed head: `cb390676bac26198c54e4ee79ac8db3d55d41149`
-- Decision: changes requested; not merged.
-- Verification passed: clean Docker build, 16 tests, desktop/mobile framing,
-  exact canvas sizing, and no browser warnings or errors.
-- Blocking findings: `IsoMath` duplicates Foundation grid values instead of
-  consuming the authoritative runtime constant, and x-oriented fences/gates
-  depth-sort above their screen-lowest ground contacts.
-- Required next step: resolve both contract issues, add focused tests, and
-  re-request Agent 13 review.
+- Approved head: `b22a91f6673e4156fe8fac03472bf69a5cfb5d6c`
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `9b70c29bb756a3390f0a7684f1eb27ab220ebc06`
+- Added authoritative isometric projection helpers, map/collision data,
+  environment rendering, spawn lanes, markers, and responsive camera framing.
+- Resolved review blockers by consuming Foundation's `ISO_GRID` directly and
+  depth-sorting both fence/gate orientations from their screen-lowest contacts.
+- Canonical `pnpm test` now runs 21 Vitest tests, 12 native Art tests, and the
+  21-entry asset validator without cross-framework collection.
+- Final verification passed: clean frozen-lock Docker build/typecheck,
+  production build, desktop/mobile framing, exact canvas sizing, and no browser
+  warnings or errors.
 
