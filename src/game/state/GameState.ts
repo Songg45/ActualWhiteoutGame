@@ -106,9 +106,29 @@ export class GameState {
 	}
 
 	reset(): void {
+		const previousResources = this.resources;
+		const previousWave = this.currentWave;
+
 		this.resources = { ...INITIAL_RESOURCES };
 		this.unlockedBuildings.clear();
 		this.currentWave = 0;
+
+		for (const resource of Object.keys(INITIAL_RESOURCES) as ResourceType[]) {
+			const previousValue = previousResources[resource];
+
+			if (previousValue !== 0) {
+				this.events.emit('resource:changed', {
+					resource,
+					value: 0,
+					delta: -previousValue
+				});
+			}
+		}
+
+		if (previousWave !== 0) {
+			this.events.emit('wave:changed', { wave: 0 });
+		}
+
 		this.publishSnapshot();
 	}
 

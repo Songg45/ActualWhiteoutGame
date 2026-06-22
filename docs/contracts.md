@@ -43,8 +43,8 @@ container.setDepth(baseY);
 - Runtime code may import `ISO_GRID` and `worldDepthFromBaseY` from
   `src/game/config.ts`.
 
-This contract deliberately matches the asset geometry proposed by Agent 10 in
-PR #1.
+Foundation owns this authoritative runtime geometry. Art and map branches must
+align their assets and placement logic to these values.
 
 ## Foundation State
 
@@ -61,4 +61,8 @@ The typed `GameEventBus` publishes:
 
 Gameplay systems should subscribe through the returned unsubscribe function
 and release subscriptions during scene or object shutdown.
+
+`GameState.reset()` emits `resource:changed` for each non-zero resource and
+`wave:changed` when a non-zero wave returns to zero, followed by one final
+`state:changed` snapshot. This keeps field-specific consumers synchronized.
 

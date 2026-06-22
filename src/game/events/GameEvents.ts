@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import type { GameStateSnapshot, ResourceType } from '../state/GameState';
 
 export interface GameEventMap {
@@ -19,16 +18,21 @@ export interface GameEventMap {
 type EventName = keyof GameEventMap;
 type EventListener<TEvent extends EventName> = (payload: GameEventMap[TEvent]) => void;
 
+interface EventSubscription<TEvent extends EventName = EventName> {
+	listener: EventListener<TEvent>;
+	context?: unknown;
+	once: boolean;
+}
+
 export class GameEventBus {
-	private readonly emitter = new Phaser.Events.EventEmitter();
+	private readonly subscriptions = new Map<EventName, Set<EventSubscription>>();
 
 	on<TEvent extends EventName>(
 		event: TEvent,
 		listener: EventListener<TEvent>,
 		context?: unknown
 	): () => void {
-		this.emitter.on(event, listener, context);
-		return () => this.off(event, listener, context);
+		return this.subscribe(event, listener, context, false);
 	}
 
 	once<TEvent extends EventName>(
@@ -36,8 +40,7 @@ export class GameEventBus {
 		listener: EventListener<TEvent>,
 		context?: unknown
 	): () => void {
-		this.emitter.once(event, listener, context);
-		return () => this.off(event, listener, context);
+		return this.subscribe(event, listener, context, true);
 	}
 
 	off<TEvent extends EventName>(
@@ -45,20 +48,74 @@ export class GameEventBus {
 		listener: EventListener<TEvent>,
 		context?: unknown
 	): void {
-		this.emitter.off(event, listener, context);
+		const eventSubscriptions = this.subscriptions.get(event);
+
+		if (!eventSubscriptions) {
+			return;
+		}
+
+		for (const subscription of eventSubscriptions) {
+			if (subscription.listener === listener && subscription.context === context) {
+				eventSubscriptions.delete(subscription);
+			}
+		}
+
+		if (eventSubscriptions.size === 0) {
+			this.subscriptions.delete(event);
+		}
 	}
 
 	emit<TEvent extends EventName>(event: TEvent, payload: GameEventMap[TEvent]): void {
-		this.emitter.emit(event, payload);
+		const eventSubscriptions = this.subscriptions.get(event);
+
+		if (!eventSubscriptions) {
+			return;
+		}
+
+		for (const subscription of [...eventSubscriptions]) {
+			if (subscription.once) {
+				eventSubscriptions.delete(subscription);
+			}
+
+			const listener = subscription.listener as EventListener<TEvent>;
+			listener.call(subscription.context, payload);
+		}
+
+		if (eventSubscriptions.size === 0) {
+			this.subscriptions.delete(event);
+		}
 	}
 
 	clear(event?: EventName): void {
 		if (event) {
-			this.emitter.removeAllListeners(event);
+			this.subscriptions.delete(event);
 			return;
 		}
 
-		this.emitter.removeAllListeners();
+		this.subscriptions.clear();
+	}
+
+	private subscribe<TEvent extends EventName>(
+		event: TEvent,
+		listener: EventListener<TEvent>,
+		context: unknown,
+		once: boolean
+	): () => void {
+		const subscription: EventSubscription<TEvent> = {
+			listener,
+			context,
+			once
+		};
+		const eventSubscriptions = this.subscriptions.get(event) ?? new Set<EventSubscription>();
+		eventSubscriptions.add(subscription as EventSubscription);
+		this.subscriptions.set(event, eventSubscriptions);
+
+		return () => {
+			eventSubscriptions.delete(subscription as EventSubscription);
+			if (eventSubscriptions.size === 0) {
+				this.subscriptions.delete(event);
+			}
+		};
 	}
 }
 
