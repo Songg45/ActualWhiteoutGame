@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
 import { DEPTH_LAYERS, GAME_COLORS, SCENE_KEYS, WORLD_BOUNDS } from '../config';
-import { PLACEHOLDER_TEXTURE_KEY } from './PreloadScene';
+import { MapBuilder, type BuiltMap } from '../map/MapBuilder';
+import { createMapData } from '../map/MapData';
 
 export class GameScene extends Phaser.Scene {
 	private backdrop?: Phaser.GameObjects.Graphics;
-	private shell?: Phaser.GameObjects.Container;
+	private builtMap?: BuiltMap;
 
 	constructor() {
 		super(SCENE_KEYS.game);
@@ -17,48 +18,53 @@ export class GameScene extends Phaser.Scene {
 			WORLD_BOUNDS.width,
 			WORLD_BOUNDS.height
 		);
-		this.createShell();
-		this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutShell, this);
+		this.cameras.main.setBackgroundColor(GAME_COLORS.snowShadow);
+		this.createWorld();
+		this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 		this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutShell, this);
+			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
+			this.builtMap?.destroy();
 		});
 	}
 
-	private createShell(): void {
+	private createWorld(): void {
 		this.backdrop = this.add.graphics().setDepth(DEPTH_LAYERS.ground);
+		this.backdrop
+			.fillStyle(GAME_COLORS.snowShadow)
+			.fillRect(WORLD_BOUNDS.x, WORLD_BOUNDS.y, WORLD_BOUNDS.width, WORLD_BOUNDS.height)
+			.fillStyle(0xffffff, 0.2)
+			.fillEllipse(WORLD_BOUNDS.width / 2, 530, 1680, 900);
 
-		const badge = this.add.image(0, -76, PLACEHOLDER_TEXTURE_KEY).setDisplaySize(64, 64);
-		const title = this.add.text(0, -20, 'Actual Whiteout Game', {
-			color: GAME_COLORS.ink,
-			fontFamily: 'Arial, sans-serif',
-			fontSize: '30px',
-			fontStyle: 'bold'
-		}).setOrigin(0.5);
-		const status = this.add.text(0, 25, 'Foundation scene flow ready', {
-			color: GAME_COLORS.mutedInk,
-			fontFamily: 'Arial, sans-serif',
-			fontSize: '16px'
-		}).setOrigin(0.5);
-		const detail = this.add.text(0, 58, 'Boot  >  Preload  >  Game', {
-			color: GAME_COLORS.mutedInk,
-			fontFamily: 'Arial, sans-serif',
-			fontSize: '13px'
-		}).setOrigin(0.5).setAlpha(0.8);
-
-		this.shell = this.add.container(0, 0, [badge, title, status, detail])
-			.setDepth(DEPTH_LAYERS.world);
-		this.layoutShell();
+		this.builtMap = new MapBuilder(
+			this,
+			createMapData(),
+			{ x: WORLD_BOUNDS.width / 2, y: 130 }
+		).build();
+		this.layoutWorld();
 	}
 
-	private layoutShell(): void {
+	private layoutWorld(): void {
+		if (!this.builtMap) {
+			return;
+		}
+
 		const width = this.scale.width;
 		const height = this.scale.height;
+		const portrait = height > width;
+		const targetWidth = portrait ? 900 : this.builtMap.bounds.width;
+		const targetHeight = portrait ? 1120 : this.builtMap.bounds.height;
+		const zoom = Phaser.Math.Clamp(
+			Math.min(width / targetWidth, height / targetHeight) * 0.96,
+			0.28,
+			1
+		);
+		const centerX = this.builtMap.bounds.x + this.builtMap.bounds.width / 2;
+		const centerY = portrait
+			? 500
+			: this.builtMap.bounds.y + this.builtMap.bounds.height / 2;
 
-		this.backdrop?.clear()
-			.fillStyle(GAME_COLORS.snow, 1)
-			.fillRect(0, 0, width, height)
-			.fillStyle(GAME_COLORS.snowShadow, 0.28)
-			.fillEllipse(width / 2, height * 0.72, Math.min(width * 0.85, 720), 120);
-		this.shell?.setPosition(width / 2, height / 2);
+		this.cameras.main
+			.setZoom(zoom)
+			.centerOn(centerX, centerY);
 	}
 }
