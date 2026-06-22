@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ISO_GRID } from '../config';
 import {
 	getTileDiamond,
 	gridToScreen,
@@ -7,6 +8,19 @@ import {
 } from './IsoMath';
 
 describe('isometric coordinate helpers', () => {
+	it('projects directly from the Foundation ISO_GRID contract', () => {
+		expect(gridToScreen({ x: 1, y: 0 })).toEqual({
+			x: ISO_GRID.halfTileWidth,
+			y: ISO_GRID.halfTileHeight
+		});
+		expect(getTileDiamond({ x: 0, y: 0 })).toEqual([
+			{ x: 0, y: -ISO_GRID.halfTileHeight },
+			{ x: ISO_GRID.halfTileWidth, y: 0 },
+			{ x: 0, y: ISO_GRID.halfTileHeight },
+			{ x: -ISO_GRID.halfTileWidth, y: 0 }
+		]);
+	});
+
 	it('projects the authoritative 128x64 grid', () => {
 		expect(gridToScreen({ x: 0, y: 0 })).toEqual({ x: 0, y: 0 });
 		expect(gridToScreen({ x: 1, y: 0 })).toEqual({ x: 64, y: 32 });

@@ -1,9 +1,4 @@
-const ISO_GRID: typeof import('../config').ISO_GRID = {
-	tileWidth: 128,
-	tileHeight: 64,
-	halfTileWidth: 64,
-	halfTileHeight: 32
-};
+import { ISO_GRID } from '../config';
 
 export interface GridPoint {
 	x: number;

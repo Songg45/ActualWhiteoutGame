@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { worldDepthFromBaseY } from '../config';
 import type { EnvironmentDefinition } from '../map/MapData';
-import { gridToScreen, type GridPoint, type ScreenPoint } from '../map/IsoMath';
+import type { GridPoint, ScreenPoint } from '../map/IsoMath';
+import { resolveEnvironmentPlacement } from './EnvironmentPlacement';
 
 const COLORS = {
 	trunk: 0x8f4d2e,
@@ -25,13 +25,17 @@ export class EnvironmentObject extends Phaser.GameObjects.Container {
 		definition: EnvironmentDefinition,
 		origin: ScreenPoint
 	) {
-		const basePoint = gridToScreen(definition.grid, origin);
+		const placement = resolveEnvironmentPlacement(definition, origin);
+		const { basePoint } = placement;
 		super(scene, basePoint.x, basePoint.y);
 
 		this.definition = definition;
 		this.basePoint = basePoint;
-		this.add(this.createVisual(scene, definition));
-		this.setDepth(worldDepthFromBaseY(basePoint.y));
+		this.add(
+			this.createVisual(scene, definition)
+				.setPosition(placement.visualOffset.x, placement.visualOffset.y)
+		);
+		this.setDepth(placement.depth);
 		scene.add.existing(this);
 	}
 
