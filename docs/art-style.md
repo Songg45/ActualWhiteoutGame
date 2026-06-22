@@ -199,8 +199,35 @@ node --test tests/assets-manifest.test.mjs
 
 The validator checks required fields, allowed statuses, normalized origins,
 positive integer dimensions, unique IDs and paths, safe PNG paths, provenance
-rules, PNG signatures, and declared dimensions for every asset whose status is
-not `needed`.
+rules, PNG signatures, declared dimensions, alpha channels, and the 250 KB
+prototype size ceiling for every asset whose status is not `needed`.
+
+## Current Placeholder Pack
+
+The first reviewed pack is extracted from the unchanged project-original,
+AI-assisted atlas at `docs/assets/review/source-atlas.png`. The generated contact
+sheet at `docs/assets/review/placeholder-pack-contact-sheet.png` shows transparent
+padding and each declared base point. The atlas contains no Whiteout Survival
+branding, UI, copied characters, text, or logos.
+
+The checked-in processor maps 11 defensible cells to stable manifest paths:
+player, bear, snowy pine, fence, crossbow turret, furnace, wood stack, meat
+pickup, and the three resource UI icons. It removes the magenta key, retains the
+largest connected subject, despills edges, and places the lowest visible contact
+at the declared origin.
+
+Regeneration remains required for a standalone world-money pickup/stack. The
+atlas only provides money inside circular UI medallions, so those cells must not
+be relabeled as world sprites. Worker, customer, gate, effects, alternate stack
+heights, and animation/direction variants also remain `needed`.
+
+To reproduce the current outputs with Pillow:
+
+```text
+python scripts/process-placeholder-atlas.py \
+  --source docs/assets/review/source-atlas.png \
+  --repo .
+```
 
 ## Replacement Rules
 

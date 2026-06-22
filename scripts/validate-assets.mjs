@@ -24,6 +24,7 @@ const REQUIRED_ASSET_FIELDS = [
 const PNG_SIGNATURE = Buffer.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
 ]);
+export const MAX_PNG_BYTES = 250 * 1024;
 
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
@@ -37,8 +38,8 @@ function isNormalizedNumber(value) {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
 }
 
-function readPngDimensions(filePath) {
-  const header = Buffer.alloc(24);
+function readPngMetadata(filePath) {
+  const header = Buffer.alloc(26);
   const handle = fs.openSync(filePath, 'r');
 
   try {
@@ -49,7 +50,9 @@ function readPngDimensions(filePath) {
 
     return {
       width: header.readUInt32BE(16),
-      height: header.readUInt32BE(20)
+      height: header.readUInt32BE(20),
+      colorType: header[25],
+      size: fs.statSync(filePath).size
     };
   } finally {
     fs.closeSync(handle);
@@ -178,14 +181,22 @@ export function validateManifest(manifest, assetRoot, options = {}) {
         errors.push(`${label}: declared asset file does not exist at "${asset.path}"`);
       } else {
         try {
-          const dimensions = readPngDimensions(filePath);
+          const metadata = readPngMetadata(filePath);
           if (
-            dimensions.width !== asset.canvas?.width ||
-            dimensions.height !== asset.canvas?.height
+            metadata.width !== asset.canvas?.width ||
+            metadata.height !== asset.canvas?.height
           ) {
             errors.push(
-              `${label}: PNG is ${dimensions.width}x${dimensions.height}, ` +
+              `${label}: PNG is ${metadata.width}x${metadata.height}, ` +
               `manifest declares ${asset.canvas?.width}x${asset.canvas?.height}`
+            );
+          }
+          if (metadata.colorType !== 4 && metadata.colorType !== 6) {
+            errors.push(`${label}: PNG must contain an alpha channel`);
+          }
+          if (metadata.size > MAX_PNG_BYTES) {
+            errors.push(
+              `${label}: PNG is ${metadata.size} bytes, maximum is ${MAX_PNG_BYTES}`
             );
           }
         } catch (error) {

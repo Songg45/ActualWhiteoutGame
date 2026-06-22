@@ -35,9 +35,13 @@
       "footprint": { "halfTilesX": 1, "halfTilesY": 1 },
       "directions": ["ne", "nw", "se", "sw"],
       "states": ["idle", "walk", "carry", "interact"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Blue-coated player with a warm accent; animation frames may replace this aggregate path while retaining the ID."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r1c2"
+      },
+      "notes": "AI-assisted project-original placeholder, keyed and base-aligned from the source atlas. Blue coat and yellow scarf remain readable at mobile scale; no branding or text."
     },
     {
       "id": "character.worker.blue",
@@ -77,9 +81,13 @@
       "footprint": { "halfTilesX": 2, "halfTilesY": 2 },
       "directions": ["ne", "nw", "se", "sw"],
       "states": ["idle", "walk", "attack", "hurt", "defeat"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Broad, readable toy bear; defeat treatment must remain non-gory."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r1c3"
+      },
+      "notes": "AI-assisted project-original gray toy-bear placeholder with a broad readable silhouette; keyed and aligned to the lowest paw contact."
     },
     {
       "id": "environment.tree.snowy-pine",
@@ -90,9 +98,13 @@
       "origin": { "x": 0.5, "y": 0.94 },
       "footprint": { "halfTilesX": 2, "halfTilesY": 2 },
       "variants": ["small", "medium", "large"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Three or four broad foliage tiers with a visible red-brown trunk base."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r1c1"
+      },
+      "notes": "AI-assisted project-original snowy pine placeholder with broad tiers and a visible trunk; keyed and aligned to trunk ground contact."
     },
     {
       "id": "environment.fence.timber",
@@ -104,9 +116,13 @@
       "footprint": { "halfTilesX": 2, "halfTilesY": 1 },
       "directions": ["ne", "nw"],
       "states": ["intact", "damaged", "broken"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Snow-capped timber palisade segment; direction variants share the same ground contact."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r1c4"
+      },
+      "notes": "AI-assisted project-original snow-capped timber palisade placeholder; keyed and aligned to the segment's lower ground-contact midpoint."
     },
     {
       "id": "environment.gate.timber",
@@ -132,9 +148,13 @@
       "footprint": { "halfTilesX": 2, "halfTilesY": 2 },
       "directions": ["ne", "nw", "se", "sw"],
       "states": ["idle", "fire", "recoil"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Timber tower, stone footings, and oversized readable crossbow."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r2c1"
+      },
+      "notes": "AI-assisted project-original timber-and-stone crossbow turret placeholder; keyed and aligned to the front/lower footing contact."
     },
     {
       "id": "building.furnace.camp",
@@ -145,9 +165,13 @@
       "origin": { "x": 0.5, "y": 0.88 },
       "footprint": { "halfTilesX": 2, "halfTilesY": 2 },
       "states": ["cold", "lit", "working"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Stone and iron furnace with a strong warm center; flame may be a separate effect."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r2c2"
+      },
+      "notes": "AI-assisted project-original stone furnace placeholder with a strong warm center; keyed and aligned to the front/lower stone contact."
     },
     {
       "id": "resource.meat.single",
@@ -157,9 +181,13 @@
       "canvas": { "width": 64, "height": 64 },
       "origin": { "x": 0.5, "y": 0.82 },
       "footprint": { "halfTilesX": 1, "halfTilesY": 1 },
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Simplified red cut with pale rim; no gore or dripping."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r2c4"
+      },
+      "notes": "AI-assisted project-original simplified meat pickup with a pale rim, no gore, and a stable lower contact point."
     },
     {
       "id": "resource.meat.stack",
@@ -195,9 +223,13 @@
       "origin": { "x": 0.5, "y": 0.9 },
       "footprint": { "halfTilesX": 1, "halfTilesY": 1 },
       "variants": ["01", "02", "03", "04"],
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "Alternating log layers with stable base point."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r2c3"
+      },
+      "notes": "AI-assisted project-original three-log wood stack with readable cut ends and a stable lower contact point."
     },
     {
       "id": "resource.money.single",
@@ -271,9 +303,13 @@
       "canvas": { "width": 64, "height": 64 },
       "origin": { "x": 0.5, "y": 0.5 },
       "footprint": null,
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "High-contrast icon derived from the wood pickup silhouette."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r3c2"
+      },
+      "notes": "AI-assisted project-original circular wood icon; preserved as a high-contrast 64px UI placeholder."
     },
     {
       "id": "ui.icon.resource-meat",
@@ -283,9 +319,13 @@
       "canvas": { "width": 64, "height": 64 },
       "origin": { "x": 0.5, "y": 0.5 },
       "footprint": null,
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "High-contrast icon derived from the meat pickup silhouette."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r3c3"
+      },
+      "notes": "AI-assisted project-original circular meat icon; preserved as a high-contrast 64px UI placeholder."
     },
     {
       "id": "ui.icon.resource-money",
@@ -295,9 +335,13 @@
       "canvas": { "width": 64, "height": 64 },
       "origin": { "x": 0.5, "y": 0.5 },
       "footprint": null,
-      "status": "needed",
-      "license": { "type": "original", "creator": null, "source": null },
-      "notes": "High-contrast abstract green bundle; no currency glyph."
+      "status": "placeholder",
+      "license": {
+        "type": "project-original-ai-assisted-placeholder",
+        "creator": "Actual Whiteout Game contributors with OpenAI image generation",
+        "source": "docs/assets/review/source-atlas.png cell r3c4"
+      },
+      "notes": "AI-assisted project-original circular green-bundle icon with no real-world currency glyph; preserved as a 64px UI placeholder."
     }
   ]
 }
