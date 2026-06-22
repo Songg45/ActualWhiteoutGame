@@ -6,13 +6,15 @@
 	"packageManager": "pnpm@10.15.1",
 	"scripts": {
 		"dev": "vite --host 0.0.0.0",
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
 		"build": "pnpm typecheck && vite build",
 		"preview": "vite preview --host 0.0.0.0"
 	},
 	"devDependencies": {
 		"typescript": "^6.0.3",
-		"vite": "^8.0.16"
+		"vite": "^8.0.16",
+		"vitest": "^4.1.9"
 	},
 	"dependencies": {
 		"phaser": "^3.90.0"
