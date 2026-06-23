@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { worldDepthFromBaseY } from '../config';
 import type { BuiltMap } from '../map/MapBuilder';
-import { gridToScreen, screenToGrid, screenToNearestGrid, type GridPoint } from '../map/IsoMath';
+import { gridToScreen, screenToGrid, type GridPoint } from '../map/IsoMath';
 import {
 	CarryStackSystem,
 } from '../systems/CarryStackSystem';
@@ -11,11 +11,7 @@ import {
 	type DropZoneInteractable,
 	type Interactable
 } from '../systems/InteractionSystem';
-import {
-	findGridPath,
-	MovementSystem,
-	type MovementStep
-} from '../systems/MovementSystem';
+import { MovementSystem, type MovementDirection } from '../systems/MovementSystem';
 import type { ResourceType } from '../state/GameState';
 
 export type PlayerState = 'idle' | 'walking' | 'carrying' | 'interacting';
@@ -26,11 +22,10 @@ export interface PlayerOptions {
 }
 
 export class Player extends Phaser.GameObjects.Container {
-	readonly movement = new MovementSystem();
+	readonly movement: MovementSystem;
 	readonly interactions: InteractionSystem;
 	readonly carry: CarryStackSystem;
 	private animationStateValue: PlayerState = 'idle';
-	private pointerTarget?: Phaser.GameObjects.Graphics;
 
 	constructor(
 		scene: Phaser.Scene,
@@ -40,6 +35,12 @@ export class Player extends Phaser.GameObjects.Container {
 		const spawn = gridToScreen(options.spawnGrid, map.origin);
 		super(scene, spawn.x, spawn.y);
 		scene.add.existing(this);
+		this.movement = new MovementSystem({
+			width: map.data.width,
+			height: map.data.height,
+			origin: map.origin,
+			blockedGridKeys: map.blockedGridKeys
+		});
 
 		const shadow = scene.add.ellipse(0, -2, 54, 20, 0x193b4c, 0.2);
 		const sprite = scene.add.image(0, 0, 'player-blue')
@@ -63,26 +64,8 @@ export class Player extends Phaser.GameObjects.Container {
 		return screenToGrid({ x: this.x, y: this.y }, this.map.origin);
 	}
 
-	moveToWorld(world: Phaser.Math.Vector2): boolean {
-		const targetGrid = screenToNearestGrid(world, this.map.origin);
-		const path = findGridPath(this.gridPosition, targetGrid, {
-			width: this.map.data.width,
-			height: this.map.data.height,
-			blockedGridKeys: this.map.blockedGridKeys
-		});
-
-		if (path.length === 0) {
-			return false;
-		}
-
-		const steps: MovementStep[] = path.map((grid) => ({
-			grid,
-			screen: gridToScreen(grid, this.map.origin)
-		}));
-		this.movement.setPath(steps);
-		this.showPointerTarget(steps.at(-1)!.screen);
-		this.setAnimationState('walking');
-		return true;
+	setMovementDirection(direction: MovementDirection): void {
+		this.movement.setDirection(direction);
 	}
 
 	setInteracting(active: boolean): void {
@@ -122,14 +105,15 @@ export class Player extends Phaser.GameObjects.Container {
 		this.updateDepth();
 		this.interactions.update(this.gridPosition);
 
-		if (!this.movement.isMoving && this.animationStateValue === 'walking') {
-			this.pointerTarget?.setVisible(false);
+		if (next.moved && this.animationStateValue !== 'interacting') {
+			this.setAnimationState('walking');
+		} else if (!this.movement.isMoving && this.animationStateValue === 'walking') {
 			this.setAnimationState(this.carry.total > 0 ? 'carrying' : 'idle');
 		}
 	}
 
 	override destroy(fromScene?: boolean): void {
-		this.pointerTarget?.destroy();
+		this.movement.clear();
 		super.destroy(fromScene);
 	}
 
@@ -141,18 +125,4 @@ export class Player extends Phaser.GameObjects.Container {
 		this.setDepth(worldDepthFromBaseY(this.y));
 	}
 
-	private showPointerTarget(point: { x: number; y: number }): void {
-		if (!this.pointerTarget) {
-			this.pointerTarget = this.scene.add.graphics();
-		}
-		this.pointerTarget
-			.clear()
-			.lineStyle(3, 0xffffff, 0.9)
-			.strokeCircle(0, 0, 13)
-			.lineStyle(2, 0x4fc66b, 0.9)
-			.strokeCircle(0, 0, 8)
-			.setPosition(point.x, point.y)
-			.setDepth(worldDepthFromBaseY(point.y - 1))
-			.setVisible(true);
-	}
 }

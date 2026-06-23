@@ -1,201 +1,168 @@
-import type { GridPoint, ScreenPoint } from '../map/IsoMath';
+import { ISO_GRID } from '../config';
+import type { ScreenPoint } from '../map/IsoMath';
+import { screenToGrid } from '../map/IsoMath';
 import { gridKey } from '../map/MapData';
 
 export interface MovementMap {
 	width: number;
 	height: number;
+	origin: ScreenPoint;
 	blockedGridKeys: ReadonlySet<string>;
 }
 
-export interface MovementStep {
-	grid: GridPoint;
-	screen: ScreenPoint;
+export interface MovementDirection {
+	x: number;
+	y: number;
 }
 
-const CARDINAL_DIRECTIONS: readonly GridPoint[] = [
-	{ x: 1, y: 0 },
-	{ x: -1, y: 0 },
-	{ x: 0, y: 1 },
-	{ x: 0, y: -1 }
-];
-
-function manhattanDistance(left: GridPoint, right: GridPoint): number {
-	return Math.abs(left.x - right.x) + Math.abs(left.y - right.y);
+export interface MovementResult extends ScreenPoint {
+	moved: boolean;
 }
 
-function isSameCell(left: GridPoint, right: GridPoint): boolean {
-	return left.x === right.x && left.y === right.y;
-}
+export const PLAYER_BODY_RADIUS = 16;
+const MAX_SUBSTEP_DISTANCE = 8;
+const GRID_RADIUS_PER_SCREEN_PIXEL = Math.hypot(
+	1 / (ISO_GRID.halfTileWidth * 2),
+	1 / (ISO_GRID.halfTileHeight * 2)
+);
 
-export function clampGridPoint(point: GridPoint, map: MovementMap): GridPoint {
+export function normalizeMovementDirection(
+	direction: MovementDirection
+): MovementDirection {
+	const magnitude = Math.hypot(direction.x, direction.y);
+	if (magnitude <= 1) {
+		return { ...direction };
+	}
 	return {
-		x: Math.max(0, Math.min(map.width - 1, Math.round(point.x))),
-		y: Math.max(0, Math.min(map.height - 1, Math.round(point.y)))
+		x: direction.x / magnitude,
+		y: direction.y / magnitude
 	};
 }
 
-export function isWalkableGridPoint(point: GridPoint, map: MovementMap): boolean {
-	return Number.isInteger(point.x)
-		&& Number.isInteger(point.y)
-		&& point.x >= 0
-		&& point.x < map.width
-		&& point.y >= 0
-		&& point.y < map.height
-		&& !map.blockedGridKeys.has(gridKey(point));
+export function combineMovementDirections(
+	...directions: readonly MovementDirection[]
+): MovementDirection {
+	return normalizeMovementDirection(directions.reduce(
+		(combined, direction) => ({
+			x: combined.x + direction.x,
+			y: combined.y + direction.y
+		}),
+		{ x: 0, y: 0 }
+	));
 }
 
-export function findNearestWalkableGridPoint(
-	point: GridPoint,
-	map: MovementMap
-): GridPoint | null {
-	const start = clampGridPoint(point, map);
-	if (isWalkableGridPoint(start, map)) {
-		return start;
+export function keyboardMovementDirection(keys: {
+	left: boolean;
+	right: boolean;
+	up: boolean;
+	down: boolean;
+}): MovementDirection {
+	return normalizeMovementDirection({
+		x: Number(keys.right) - Number(keys.left),
+		y: Number(keys.down) - Number(keys.up)
+	});
+}
+
+export function canOccupyWorldPosition(
+	position: ScreenPoint,
+	map: MovementMap,
+	bodyRadius = PLAYER_BODY_RADIUS
+): boolean {
+	const grid = screenToGrid(position, map.origin);
+	const gridPadding = bodyRadius * GRID_RADIUS_PER_SCREEN_PIXEL;
+
+	if (
+		grid.x < -0.5 + gridPadding
+		|| grid.x > map.width - 0.5 - gridPadding
+		|| grid.y < -0.5 + gridPadding
+		|| grid.y > map.height - 0.5 - gridPadding
+	) {
+		return false;
 	}
 
-	const queue: GridPoint[] = [start];
-	const visited = new Set<string>([gridKey(start)]);
+	const minX = Math.max(0, Math.floor(grid.x - 0.5 - gridPadding));
+	const maxX = Math.min(map.width - 1, Math.ceil(grid.x + 0.5 + gridPadding));
+	const minY = Math.max(0, Math.floor(grid.y - 0.5 - gridPadding));
+	const maxY = Math.min(map.height - 1, Math.ceil(grid.y + 0.5 + gridPadding));
 
-	while (queue.length > 0) {
-		const current = queue.shift()!;
-		for (const direction of CARDINAL_DIRECTIONS) {
-			const next = {
-				x: current.x + direction.x,
-				y: current.y + direction.y
-			};
-			const key = gridKey(next);
-
+	for (let y = minY; y <= maxY; y += 1) {
+		for (let x = minX; x <= maxX; x += 1) {
 			if (
-				visited.has(key)
-				|| next.x < 0
-				|| next.x >= map.width
-				|| next.y < 0
-				|| next.y >= map.height
+				map.blockedGridKeys.has(gridKey({ x, y }))
+				&& Math.abs(grid.x - x) < 0.5 + gridPadding
+				&& Math.abs(grid.y - y) < 0.5 + gridPadding
 			) {
-				continue;
+				return false;
 			}
-
-			if (isWalkableGridPoint(next, map)) {
-				return next;
-			}
-
-			visited.add(key);
-			queue.push(next);
 		}
 	}
 
-	return null;
+	return true;
 }
 
-export function findGridPath(
-	startPoint: GridPoint,
-	targetPoint: GridPoint,
-	map: MovementMap
-): GridPoint[] {
-	const start = findNearestWalkableGridPoint(startPoint, map);
-	const target = findNearestWalkableGridPoint(targetPoint, map);
+export function moveWithCollision(
+	position: ScreenPoint,
+	displacement: MovementDirection,
+	map: MovementMap,
+	bodyRadius = PLAYER_BODY_RADIUS
+): MovementResult {
+	const distance = Math.hypot(displacement.x, displacement.y);
+	const substeps = Math.max(1, Math.ceil(distance / MAX_SUBSTEP_DISTANCE));
+	const stepX = displacement.x / substeps;
+	const stepY = displacement.y / substeps;
+	let x = position.x;
+	let y = position.y;
 
-	if (!start || !target) {
-		return [];
-	}
-	if (isSameCell(start, target)) {
-		return [start];
-	}
-
-	const open = new Map<string, GridPoint>([[gridKey(start), start]]);
-	const cameFrom = new Map<string, string>();
-	const points = new Map<string, GridPoint>([[gridKey(start), start]]);
-	const gScore = new Map<string, number>([[gridKey(start), 0]]);
-	const fScore = new Map<string, number>([
-		[gridKey(start), manhattanDistance(start, target)]
-	]);
-
-	while (open.size > 0) {
-		const currentEntry = [...open.entries()].reduce((best, entry) => {
-			return (fScore.get(entry[0]) ?? Infinity) < (fScore.get(best[0]) ?? Infinity)
-				? entry
-				: best;
-		});
-		const [currentKey, current] = currentEntry;
-
-		if (isSameCell(current, target)) {
-			const path: GridPoint[] = [current];
-			let pathKey = currentKey;
-			while (cameFrom.has(pathKey)) {
-				pathKey = cameFrom.get(pathKey)!;
-				path.unshift(points.get(pathKey)!);
-			}
-			return path;
+	for (let step = 0; step < substeps; step += 1) {
+		const horizontal = { x: x + stepX, y };
+		if (canOccupyWorldPosition(horizontal, map, bodyRadius)) {
+			x = horizontal.x;
 		}
 
-		open.delete(currentKey);
-		for (const direction of CARDINAL_DIRECTIONS) {
-			const neighbor = {
-				x: current.x + direction.x,
-				y: current.y + direction.y
-			};
-			if (!isWalkableGridPoint(neighbor, map)) {
-				continue;
-			}
-
-			const neighborKey = gridKey(neighbor);
-			const tentativeScore = (gScore.get(currentKey) ?? Infinity) + 1;
-			if (tentativeScore >= (gScore.get(neighborKey) ?? Infinity)) {
-				continue;
-			}
-
-			cameFrom.set(neighborKey, currentKey);
-			points.set(neighborKey, neighbor);
-			gScore.set(neighborKey, tentativeScore);
-			fScore.set(neighborKey, tentativeScore + manhattanDistance(neighbor, target));
-			open.set(neighborKey, neighbor);
+		const vertical = { x, y: y + stepY };
+		if (canOccupyWorldPosition(vertical, map, bodyRadius)) {
+			y = vertical.y;
 		}
 	}
 
-	return [];
+	return {
+		x,
+		y,
+		moved: Math.abs(x - position.x) > 0.001 || Math.abs(y - position.y) > 0.001
+	};
 }
 
 export class MovementSystem {
-	private path: MovementStep[] = [];
-	private currentStep = 0;
+	private direction: MovementDirection = { x: 0, y: 0 };
 
-	constructor(private readonly speed = 245) {}
+	constructor(
+		private readonly map: MovementMap,
+		private readonly speed = 245,
+		private readonly bodyRadius = PLAYER_BODY_RADIUS
+	) {}
 
-	setPath(path: readonly MovementStep[]): void {
-		this.path = [...path];
-		this.currentStep = this.path.length > 1 ? 1 : 0;
+	setDirection(direction: MovementDirection): void {
+		this.direction = normalizeMovementDirection(direction);
 	}
 
 	clear(): void {
-		this.path = [];
-		this.currentStep = 0;
+		this.direction = { x: 0, y: 0 };
 	}
 
 	get isMoving(): boolean {
-		return this.currentStep < this.path.length;
+		return this.direction.x !== 0 || this.direction.y !== 0;
 	}
 
-	get targetGrid(): GridPoint | null {
-		return this.path.at(-1)?.grid ?? null;
-	}
-
-	update(position: ScreenPoint, delta: number): ScreenPoint {
-		const step = this.path[this.currentStep];
-		if (!step) {
-			return position;
-		}
-
-		const distance = Math.hypot(step.screen.x - position.x, step.screen.y - position.y);
-		const travel = this.speed * delta / 1000;
-
-		if (distance <= travel || distance < 0.5) {
-			this.currentStep += 1;
-			return { ...step.screen };
-		}
-
-		return {
-			x: position.x + (step.screen.x - position.x) / distance * travel,
-			y: position.y + (step.screen.y - position.y) / distance * travel
-		};
+	update(position: ScreenPoint, delta: number): MovementResult {
+		const seconds = Math.max(0, delta) / 1000;
+		return moveWithCollision(
+			position,
+			{
+				x: this.direction.x * this.speed * seconds,
+				y: this.direction.y * this.speed * seconds
+			},
+			this.map,
+			this.bodyRadius
+		);
 	}
 }
