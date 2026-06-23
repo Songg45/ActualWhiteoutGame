@@ -53,3 +53,18 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   production build, desktop/mobile framing, exact canvas sizing, and no browser
   warnings or errors.
 
+## 2026-06-23 - Agent 3 Player Controls
+
+- Branch: `codex/player-controls`
+- PR: #7
+- Approved head: `d7fbb68384ff91a3c8bf057d06c9ea09c971575d`
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `059fb273cec22deec571a3e1c6f5c0f518fc0562`
+- Added bounded collision-aware A* movement, pointer/touch retargeting, player
+  base-Y depth, camera follow, and deterministic proximity interactions.
+- Added finite typed carry limits using Foundation `ResourceType`, synchronized
+  carry visuals, and runtime drop-zone replacement hooks for Agent 4.
+- Final verification passed: 48 unit tests, 12 Art tests, 21-asset validation,
+  clean frozen-lock Docker build/typecheck, and desktop/mobile input smoke with
+  no browser warnings or errors.
+
