@@ -40,6 +40,9 @@ export class PreloadScene extends Phaser.Scene {
 			PLACEHOLDER_TEXTURE_KEY,
 			`data:image/svg+xml;base64,${btoa(PLACEHOLDER_SVG)}`
 		);
+		this.load.image('player-blue', '/assets/sprites/characters/player-blue.png');
+		this.load.image('resource-wood-stack', '/assets/sprites/resources/wood-stack.png');
+		this.load.image('resource-meat', '/assets/sprites/resources/meat-single.png');
 	}
 
 	create(): void {
