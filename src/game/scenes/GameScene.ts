@@ -3,6 +3,8 @@ import { DEPTH_LAYERS, GAME_COLORS, SCENE_KEYS, WORLD_BOUNDS } from '../config';
 import { Player } from '../entities/Player';
 import { MapBuilder, type BuiltMap } from '../map/MapBuilder';
 import { createMapData } from '../map/MapData';
+import { gameState } from '../state/GameState';
+import { EconomySystem } from '../systems/EconomySystem';
 import { MovementInputController } from '../systems/MovementInputController';
 
 export class GameScene extends Phaser.Scene {
@@ -11,6 +13,7 @@ export class GameScene extends Phaser.Scene {
 	private player?: Player;
 	private interactionPrompt?: Phaser.GameObjects.Text;
 	private movementInput?: MovementInputController;
+	private economy?: EconomySystem;
 
 	constructor() {
 		super(SCENE_KEYS.game);
@@ -24,20 +27,24 @@ export class GameScene extends Phaser.Scene {
 			WORLD_BOUNDS.height
 		);
 		this.cameras.main.setBackgroundColor(GAME_COLORS.snowShadow);
+		gameState.reset();
 		this.createWorld();
 		this.movementInput = new MovementInputController(this);
 		this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 		this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
 			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 			this.movementInput?.destroy();
+			this.economy?.destroy();
 			this.player?.destroy();
 			this.builtMap?.destroy();
+			this.backdrop?.destroy();
 		});
 	}
 
 	update(time: number, delta: number): void {
 		this.player?.setMovementDirection(this.movementInput?.direction ?? { x: 0, y: 0 });
 		this.player?.update(time, delta);
+		this.economy?.update(delta);
 		this.layoutInteractionPrompt();
 	}
 
@@ -61,11 +68,23 @@ export class GameScene extends Phaser.Scene {
 					return;
 				}
 				this.interactionPrompt
-					.setText(interactable ? `Near ${interactable.marker?.label ?? interactable.id}` : '')
+					.setText(interactable ? this.getInteractionPrompt(interactable.id) : '')
 					.setVisible(Boolean(interactable));
 			}
 		});
-		this.player.addCarry('wood', 3);
+		this.economy = new EconomySystem(
+			this,
+			this.player,
+			this.builtMap,
+			{
+				atPlayer: (text, color) => {
+					if (this.player) {
+						this.createFloatingText(this.player.x, this.player.y - 110, text, color);
+					}
+				},
+				atWorld: (x, y, text, color) => this.createFloatingText(x, y, text, color)
+			}
+		);
 		this.interactionPrompt = this.add.text(0, 0, '', {
 			color: '#17384c',
 			backgroundColor: 'rgba(255,255,255,0.9)',
@@ -111,5 +130,39 @@ export class GameScene extends Phaser.Scene {
 			return;
 		}
 		this.interactionPrompt.setPosition(this.player.x, this.player.y - 105);
+	}
+
+	private getInteractionPrompt(id: string): string {
+		if (id === 'camp-storage') {
+			return 'Auto-storing carried supplies';
+		}
+		if (id === 'reward-exchange') {
+			return 'Auto-exchanging: wood $2, meat $3';
+		}
+		if (id === 'wood-station' || id === 'meat-station') {
+			return 'Auto-collecting while nearby';
+		}
+		return `Near ${id}`;
+	}
+
+	private createFloatingText(x: number, y: number, text: string, color: string): void {
+		const feedback = this.add.text(x, y, text, {
+			color,
+			backgroundColor: 'rgba(255,255,255,0.92)',
+			fontFamily: 'Arial, sans-serif',
+			fontSize: '14px',
+			fontStyle: 'bold',
+			padding: { x: 7, y: 4 }
+		})
+			.setOrigin(0.5)
+			.setDepth(DEPTH_LAYERS.effects);
+		this.tweens.add({
+			targets: feedback,
+			y: y - 34,
+			alpha: 0,
+			duration: 850,
+			ease: 'Cubic.easeOut',
+			onComplete: () => feedback.destroy()
+		});
 	}
 }
