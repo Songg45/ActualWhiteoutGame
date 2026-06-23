@@ -68,3 +68,19 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   clean frozen-lock Docker build/typecheck, and desktop/mobile input smoke with
   no browser warnings or errors.
 
+## 2026-06-23 - Free Movement Controls
+
+- Branch: `codex/free-movement-controls`
+- PR: #9
+- Approved head: `cb9fe3143c7bc61a52a5419f049893d2df110ff7`
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `2019a431614885c318b5c30ce32538f27610cc45`
+- Replaced runtime A* routes, tap destinations, and cell snapping with
+  continuous joystick and keyboard movement while preserving Agent 4 carry and
+  drop-zone hooks.
+- Added normalized analog/keyboard input, player-radius collision, substepped
+  large-delta movement, axis sliding, and scene-safe input cleanup.
+- Final verification passed: 53 unit tests, 12 Art tests, 21-asset validation,
+  clean frozen-lock Docker build/typecheck, and desktop/mobile movement,
+  collision, resize, release-stop, and console smoke checks.
+
