@@ -5,7 +5,7 @@ import { GameScene } from './scenes/GameScene';
 import { PreloadScene } from './scenes/PreloadScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
-	type: Phaser.AUTO,
+	type: Phaser.CANVAS,
 	parent: 'game',
 	backgroundColor: GAME_COLORS.snow,
 	render: {
