@@ -1,3 +1,4 @@
+import { ISO_GRID } from '../config';
 import type { ScreenPoint } from '../map/IsoMath';
 import { screenToGrid } from '../map/IsoMath';
 import { gridKey } from '../map/MapData';
@@ -20,7 +21,10 @@ export interface MovementResult extends ScreenPoint {
 
 export const PLAYER_BODY_RADIUS = 16;
 const MAX_SUBSTEP_DISTANCE = 8;
-const GRID_RADIUS_PER_SCREEN_PIXEL = Math.hypot(1 / 128, 1 / 64);
+const GRID_RADIUS_PER_SCREEN_PIXEL = Math.hypot(
+	1 / (ISO_GRID.halfTileWidth * 2),
+	1 / (ISO_GRID.halfTileHeight * 2)
+);
 
 export function normalizeMovementDirection(
 	direction: MovementDirection

@@ -1,5 +1,6 @@
 import type { MovementDirection } from './MovementSystem';
 
+// Lower-left movement space; the right side stays available for future actions.
 export const JOYSTICK_ACTIVATION_REGION = {
 	maxWidthRatio: 0.58,
 	minHeightRatio: 0.42

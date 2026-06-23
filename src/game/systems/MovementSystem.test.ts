@@ -60,6 +60,23 @@ describe('continuous movement input', () => {
 		expect(movement.update(moved, 500)).toEqual({ ...moved, moved: false });
 		expect(movement.isMoving).toBe(false);
 	});
+
+	it('produces equivalent travel across different frame deltas', () => {
+		const start = gridToScreen({ x: 1, y: 1 }, origin);
+		const singleFrame = new MovementSystem(map, 40, 0);
+		const manyFrames = new MovementSystem(map, 40, 0);
+		singleFrame.setDirection({ x: 1, y: 0 });
+		manyFrames.setDirection({ x: 1, y: 0 });
+
+		const once = singleFrame.update(start, 1000);
+		let stepped = { ...start, moved: false };
+		for (let frame = 0; frame < 10; frame += 1) {
+			stepped = manyFrames.update(stepped, 100);
+		}
+
+		expect(stepped.x).toBeCloseTo(once.x);
+		expect(stepped.y).toBeCloseTo(once.y);
+	});
 });
 
 describe('continuous collision', () => {
