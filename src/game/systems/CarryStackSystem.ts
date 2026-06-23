@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
+import type { ResourceType } from '../state/GameState';
 
-export type CarriedResourceType = 'wood' | 'meat' | 'money';
-export type CarryCounts = Record<CarriedResourceType, number>;
+export type CarryCounts = Record<ResourceType, number>;
 
 export const DEFAULT_CARRY_LIMITS: Readonly<CarryCounts> = {
 	wood: 12,
@@ -9,12 +9,12 @@ export const DEFAULT_CARRY_LIMITS: Readonly<CarryCounts> = {
 	money: 20
 };
 
-const RESOURCE_ORDER: readonly CarriedResourceType[] = ['wood', 'meat', 'money'];
-const TEXTURE_KEYS: Partial<Record<CarriedResourceType, string>> = {
+const RESOURCE_ORDER: readonly ResourceType[] = ['wood', 'meat', 'money'];
+const TEXTURE_KEYS: Partial<Record<ResourceType, string>> = {
 	wood: 'resource-wood-stack',
 	meat: 'resource-meat'
 };
-const FALLBACK_COLORS: Record<CarriedResourceType, number> = {
+const FALLBACK_COLORS: Record<ResourceType, number> = {
 	wood: 0xd88b46,
 	meat: 0xd85a6a,
 	money: 0x4fc66b
@@ -26,8 +26,19 @@ function emptyCounts(): CarryCounts {
 
 export class CarryInventory {
 	private readonly counts = emptyCounts();
+	private readonly limits: Readonly<CarryCounts>;
 
-	constructor(private readonly limits: Readonly<CarryCounts> = DEFAULT_CARRY_LIMITS) {}
+	constructor(
+		limits: Readonly<CarryCounts> = DEFAULT_CARRY_LIMITS,
+		private readonly onChange?: (counts: Readonly<CarryCounts>) => void
+	) {
+		for (const type of RESOURCE_ORDER) {
+			if (!Number.isInteger(limits[type]) || limits[type] < 0) {
+				throw new RangeError('Carry limits must be finite non-negative integers.');
+			}
+		}
+		this.limits = { ...limits };
+	}
 
 	get snapshot(): Readonly<CarryCounts> {
 		return { ...this.counts };
@@ -37,30 +48,51 @@ export class CarryInventory {
 		return RESOURCE_ORDER.reduce((sum, type) => sum + this.counts[type], 0);
 	}
 
-	add(type: CarriedResourceType, requestedAmount: number): number {
-		const amount = Math.max(0, Math.floor(requestedAmount));
+	add(type: ResourceType, requestedAmount: number): number {
+		const amount = this.normalizeAmount(requestedAmount);
 		const accepted = Math.min(amount, this.limits[type] - this.counts[type]);
-		this.counts[type] += accepted;
+		if (accepted > 0) {
+			this.counts[type] += accepted;
+			this.publishChange();
+		}
 		return accepted;
 	}
 
-	remove(type: CarriedResourceType, requestedAmount: number): number {
-		const amount = Math.max(0, Math.floor(requestedAmount));
+	remove(type: ResourceType, requestedAmount: number): number {
+		const amount = this.normalizeAmount(requestedAmount);
 		const removed = Math.min(amount, this.counts[type]);
-		this.counts[type] -= removed;
+		if (removed > 0) {
+			this.counts[type] -= removed;
+			this.publishChange();
+		}
 		return removed;
 	}
 
 	clear(): void {
+		if (this.total === 0) {
+			return;
+		}
 		for (const type of RESOURCE_ORDER) {
 			this.counts[type] = 0;
 		}
+		this.publishChange();
+	}
+
+	private normalizeAmount(requestedAmount: number): number {
+		if (!Number.isFinite(requestedAmount)) {
+			throw new RangeError('Carry amount must be finite.');
+		}
+		return Math.max(0, Math.floor(requestedAmount));
+	}
+
+	private publishChange(): void {
+		this.onChange?.(this.snapshot);
 	}
 }
 
 export class CarryStackSystem {
-	readonly inventory: CarryInventory;
 	readonly view: Phaser.GameObjects.Container;
+	private readonly inventory: CarryInventory;
 	private signature = '';
 
 	constructor(
@@ -68,21 +100,29 @@ export class CarryStackSystem {
 		parent: Phaser.GameObjects.Container,
 		limits: Readonly<CarryCounts> = DEFAULT_CARRY_LIMITS
 	) {
-		this.inventory = new CarryInventory(limits);
 		this.view = scene.add.container(28, -77);
 		parent.add(this.view);
+		this.inventory = new CarryInventory(limits, () => this.refresh());
 	}
 
-	add(type: CarriedResourceType, amount: number): number {
-		const accepted = this.inventory.add(type, amount);
-		this.refresh();
-		return accepted;
+	get snapshot(): Readonly<CarryCounts> {
+		return this.inventory.snapshot;
 	}
 
-	remove(type: CarriedResourceType, amount: number): number {
-		const removed = this.inventory.remove(type, amount);
-		this.refresh();
-		return removed;
+	get total(): number {
+		return this.inventory.total;
+	}
+
+	add(type: ResourceType, amount: number): number {
+		return this.inventory.add(type, amount);
+	}
+
+	remove(type: ResourceType, amount: number): number {
+		return this.inventory.remove(type, amount);
+	}
+
+	clear(): void {
+		this.inventory.clear();
 	}
 
 	refresh(): void {
@@ -107,7 +147,7 @@ export class CarryStackSystem {
 	}
 
 	private createItem(
-		type: CarriedResourceType
+		type: ResourceType
 	): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
 		const textureKey = TEXTURE_KEYS[type];
 		if (textureKey && this.scene.textures.exists(textureKey)) {

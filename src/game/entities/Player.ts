@@ -4,11 +4,11 @@ import type { BuiltMap } from '../map/MapBuilder';
 import { gridToScreen, screenToGrid, screenToNearestGrid, type GridPoint } from '../map/IsoMath';
 import {
 	CarryStackSystem,
-	type CarriedResourceType
 } from '../systems/CarryStackSystem';
 import {
 	createMarkerInteractables,
 	InteractionSystem,
+	type DropZoneInteractable,
 	type Interactable
 } from '../systems/InteractionSystem';
 import {
@@ -16,6 +16,7 @@ import {
 	MovementSystem,
 	type MovementStep
 } from '../systems/MovementSystem';
+import type { ResourceType } from '../state/GameState';
 
 export type PlayerState = 'idle' | 'walking' | 'carrying' | 'interacting';
 
@@ -85,10 +86,14 @@ export class Player extends Phaser.GameObjects.Container {
 	}
 
 	setInteracting(active: boolean): void {
-		this.setAnimationState(active ? 'interacting' : this.carry.inventory.total > 0 ? 'carrying' : 'idle');
+		this.setAnimationState(active ? 'interacting' : this.carry.total > 0 ? 'carrying' : 'idle');
 	}
 
-	addCarry(type: CarriedResourceType, amount: number): number {
+	setDropZones(dropZones: readonly DropZoneInteractable[]): void {
+		this.interactions.setDropZones(dropZones);
+	}
+
+	addCarry(type: ResourceType, amount: number): number {
 		const accepted = this.carry.add(type, amount);
 		if (!this.movement.isMoving && accepted > 0) {
 			this.setAnimationState('carrying');
@@ -96,12 +101,19 @@ export class Player extends Phaser.GameObjects.Container {
 		return accepted;
 	}
 
-	removeCarry(type: CarriedResourceType, amount: number): number {
+	removeCarry(type: ResourceType, amount: number): number {
 		const removed = this.carry.remove(type, amount);
-		if (!this.movement.isMoving && this.carry.inventory.total === 0) {
+		if (!this.movement.isMoving && this.carry.total === 0) {
 			this.setAnimationState('idle');
 		}
 		return removed;
+	}
+
+	clearCarry(): void {
+		this.carry.clear();
+		if (!this.movement.isMoving) {
+			this.setAnimationState('idle');
+		}
 	}
 
 	update(_time: number, delta: number): void {
@@ -112,7 +124,7 @@ export class Player extends Phaser.GameObjects.Container {
 
 		if (!this.movement.isMoving && this.animationStateValue === 'walking') {
 			this.pointerTarget?.setVisible(false);
-			this.setAnimationState(this.carry.inventory.total > 0 ? 'carrying' : 'idle');
+			this.setAnimationState(this.carry.total > 0 ? 'carrying' : 'idle');
 		}
 	}
 

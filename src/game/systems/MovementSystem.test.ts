@@ -42,6 +42,24 @@ describe('grid pathfinding', () => {
 		expect(path.some((point) => map.blockedGridKeys.has(gridKey(point)))).toBe(false);
 		expect(path.length).toBe(7);
 	});
+
+	it('returns no route when a walkable target is disconnected', () => {
+		const disconnectedMap = {
+			width: 3,
+			height: 3,
+			blockedGridKeys: new Set([
+				gridKey({ x: 1, y: 0 }),
+				gridKey({ x: 1, y: 1 }),
+				gridKey({ x: 1, y: 2 })
+			])
+		};
+
+		expect(findGridPath(
+			{ x: 0, y: 1 },
+			{ x: 2, y: 1 },
+			disconnectedMap
+		)).toEqual([]);
+	});
 });
 
 describe('screen movement', () => {
@@ -56,5 +74,24 @@ describe('screen movement', () => {
 		expect(movement.isMoving).toBe(true);
 		expect(movement.update({ x: 50, y: 0 }, 500)).toEqual({ x: 100, y: 0 });
 		expect(movement.isMoving).toBe(false);
+	});
+
+	it('replaces an active route with a new pointer target', () => {
+		const movement = new MovementSystem(100);
+		movement.setPath([
+			{ grid: { x: 0, y: 0 }, screen: { x: 0, y: 0 } },
+			{ grid: { x: 1, y: 0 }, screen: { x: 100, y: 0 } }
+		]);
+		const midway = movement.update({ x: 0, y: 0 }, 250);
+		expect(midway).toEqual({ x: 25, y: 0 });
+
+		movement.setPath([
+			{ grid: { x: 0, y: 0 }, screen: midway },
+			{ grid: { x: 0, y: 1 }, screen: { x: 25, y: 100 } }
+		]);
+
+		expect(movement.targetGrid).toEqual({ x: 0, y: 1 });
+		expect(movement.update(midway, 250)).toEqual({ x: 25, y: 25 });
+		expect(movement.isMoving).toBe(true);
 	});
 });

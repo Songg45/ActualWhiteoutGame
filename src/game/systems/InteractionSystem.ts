@@ -16,6 +16,8 @@ export interface InteractionChange {
 	previous: Interactable | null;
 }
 
+export type DropZoneInteractable = Interactable & { kind: 'drop-zone' };
+
 function gridDistance(left: GridPoint, right: GridPoint): number {
 	return Math.hypot(left.x - right.x, left.y - right.y);
 }
@@ -54,9 +56,11 @@ export function createMarkerInteractables(
 
 export class InteractionSystem {
 	private nearby: Interactable | null = null;
+	private dropZones: readonly DropZoneInteractable[] = [];
+	private lastPlayerGrid: GridPoint | null = null;
 
 	constructor(
-		private readonly interactables: readonly Interactable[],
+		private readonly staticInteractables: readonly Interactable[],
 		private readonly onChange?: (change: InteractionChange) => void
 	) {}
 
@@ -64,9 +68,30 @@ export class InteractionSystem {
 		return this.nearby;
 	}
 
+	setDropZones(dropZones: readonly DropZoneInteractable[]): void {
+		const ids = new Set(this.staticInteractables.map(({ id }) => id));
+		for (const dropZone of dropZones) {
+			if (ids.has(dropZone.id)) {
+				throw new Error(`Duplicate drop-zone id: ${dropZone.id}`);
+			}
+			ids.add(dropZone.id);
+		}
+		this.dropZones = dropZones.map((dropZone) => ({
+			...dropZone,
+			grid: { ...dropZone.grid }
+		}));
+		if (this.lastPlayerGrid) {
+			this.update(this.lastPlayerGrid);
+		}
+	}
+
 	update(playerGrid: GridPoint): Interactable | null {
-		const next = findNearestInteractable(playerGrid, this.interactables);
-		if (next?.id === this.nearby?.id) {
+		this.lastPlayerGrid = { ...playerGrid };
+		const next = findNearestInteractable(playerGrid, [
+			...this.staticInteractables,
+			...this.dropZones
+		]);
+		if (next === this.nearby) {
 			return this.nearby;
 		}
 

@@ -51,4 +51,47 @@ describe('interaction proximity', () => {
 			previous: interactables[0]
 		});
 	});
+
+	it('registers, replaces, and removes live drop zones deterministically', () => {
+		const onChange = vi.fn();
+		const system = new InteractionSystem(interactables, onChange);
+		system.update({ x: 3, y: 3 });
+
+		system.setDropZones([
+			{ id: 'z-drop', kind: 'drop-zone', grid: { x: 3, y: 2 } },
+			{ id: 'a-drop', kind: 'drop-zone', grid: { x: 3, y: 4 } }
+		]);
+		expect(system.current?.id).toBe('a-drop');
+
+		system.setDropZones([
+			{ id: 'new-drop', kind: 'drop-zone', grid: { x: 3, y: 3 } }
+		]);
+		expect(system.current?.id).toBe('new-drop');
+
+		system.setDropZones([
+			{ id: 'new-drop', kind: 'drop-zone', grid: { x: 3.5, y: 3 } }
+		]);
+		expect(system.current?.grid).toEqual({ x: 3.5, y: 3 });
+
+		system.setDropZones([]);
+		expect(system.current).toBeNull();
+		expect(onChange.mock.calls.map(([change]) => change.current?.id ?? null)).toEqual([
+			'a-drop',
+			'new-drop',
+			'new-drop',
+			null
+		]);
+	});
+
+	it('rejects duplicate live drop-zone IDs', () => {
+		const system = new InteractionSystem(interactables);
+
+		expect(() => system.setDropZones([
+			{ id: 'drop', kind: 'drop-zone', grid: { x: 1, y: 1 } },
+			{ id: 'drop', kind: 'drop-zone', grid: { x: 2, y: 2 } }
+		])).toThrow('Duplicate drop-zone id: drop');
+		expect(() => system.setDropZones([
+			{ id: 'wood', kind: 'drop-zone', grid: { x: 1, y: 1 } }
+		])).toThrow('Duplicate drop-zone id: wood');
+	});
 });
