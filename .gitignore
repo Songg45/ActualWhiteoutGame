@@ -1,4 +1,5 @@
 node_modules/
+.worktrees/
 .pnpm-store/
 dist/
 .vite/
@@ -6,4 +7,3 @@ dist/
 .env
 .env.*
 !.env.example
-
