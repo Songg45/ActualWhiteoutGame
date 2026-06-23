@@ -1,97 +1,96 @@
 import { describe, expect, it } from 'vitest';
+import { gridToScreen } from '../map/IsoMath';
 import { gridKey } from '../map/MapData';
 import {
-	clampGridPoint,
-	findGridPath,
-	findNearestWalkableGridPoint,
-	isWalkableGridPoint,
-	MovementSystem
+	canOccupyWorldPosition,
+	combineMovementDirections,
+	keyboardMovementDirection,
+	moveWithCollision,
+	MovementSystem,
+	normalizeMovementDirection
 } from './MovementSystem';
 
+const origin = { x: 500, y: 100 };
 const map = {
 	width: 5,
 	height: 5,
-	blockedGridKeys: new Set([
-		gridKey({ x: 2, y: 1 }),
-		gridKey({ x: 2, y: 2 }),
-		gridKey({ x: 2, y: 3 })
-	])
+	origin,
+	blockedGridKeys: new Set([gridKey({ x: 2, y: 2 })])
 };
 
-describe('grid pathfinding', () => {
-	it('clamps targets to the declared map bounds', () => {
-		expect(clampGridPoint({ x: -4, y: 9 }, map)).toEqual({ x: 0, y: 4 });
+describe('continuous movement input', () => {
+	it('normalizes keyboard diagonals without slowing cardinal input', () => {
+		expect(keyboardMovementDirection({
+			left: false,
+			right: true,
+			up: true,
+			down: false
+		})).toEqual({
+			x: 1 / Math.sqrt(2),
+			y: -1 / Math.sqrt(2)
+		});
+		expect(keyboardMovementDirection({
+			left: true,
+			right: true,
+			up: false,
+			down: false
+		})).toEqual({ x: 0, y: 0 });
 	});
 
-	it('recognizes blocked and out-of-bounds cells', () => {
-		expect(isWalkableGridPoint({ x: 1, y: 1 }, map)).toBe(true);
-		expect(isWalkableGridPoint({ x: 2, y: 2 }, map)).toBe(false);
-		expect(isWalkableGridPoint({ x: 5, y: 2 }, map)).toBe(false);
+	it('combines keyboard and joystick input with a maximum magnitude of one', () => {
+		const direction = combineMovementDirections(
+			{ x: 1, y: 0 },
+			{ x: 0.7, y: 0.7 }
+		);
+		expect(Math.hypot(direction.x, direction.y)).toBeCloseTo(1);
+		expect(normalizeMovementDirection({ x: 0.25, y: 0 })).toEqual({ x: 0.25, y: 0 });
 	});
 
-	it('chooses a nearby valid cell when the pointer lands on an obstacle', () => {
-		const target = findNearestWalkableGridPoint({ x: 2, y: 2 }, map);
-		expect(target).toEqual({ x: 3, y: 2 });
-	});
+	it('moves by speed times delta and stops immediately after clear', () => {
+		const movement = new MovementSystem(map, 100, 0);
+		const start = gridToScreen({ x: 1, y: 1 }, origin);
+		movement.setDirection({ x: 0.6, y: 0 });
 
-	it('routes around representative blocked footprints', () => {
-		const path = findGridPath({ x: 1, y: 2 }, { x: 3, y: 2 }, map);
+		const moved = movement.update(start, 500);
+		expect(moved.x).toBeCloseTo(start.x + 30);
+		expect(moved.y).toBe(start.y);
+		expect(movement.isMoving).toBe(true);
 
-		expect(path[0]).toEqual({ x: 1, y: 2 });
-		expect(path.at(-1)).toEqual({ x: 3, y: 2 });
-		expect(path.some((point) => map.blockedGridKeys.has(gridKey(point)))).toBe(false);
-		expect(path.length).toBe(7);
-	});
-
-	it('returns no route when a walkable target is disconnected', () => {
-		const disconnectedMap = {
-			width: 3,
-			height: 3,
-			blockedGridKeys: new Set([
-				gridKey({ x: 1, y: 0 }),
-				gridKey({ x: 1, y: 1 }),
-				gridKey({ x: 1, y: 2 })
-			])
-		};
-
-		expect(findGridPath(
-			{ x: 0, y: 1 },
-			{ x: 2, y: 1 },
-			disconnectedMap
-		)).toEqual([]);
+		movement.clear();
+		expect(movement.update(moved, 500)).toEqual({ ...moved, moved: false });
+		expect(movement.isMoving).toBe(false);
 	});
 });
 
-describe('screen movement', () => {
-	it('moves through waypoints without overshooting and stops at the target', () => {
-		const movement = new MovementSystem(100);
-		movement.setPath([
-			{ grid: { x: 0, y: 0 }, screen: { x: 0, y: 0 } },
-			{ grid: { x: 1, y: 0 }, screen: { x: 100, y: 0 } }
-		]);
+describe('continuous collision', () => {
+	it('keeps the player body inside map bounds', () => {
+		const nearEdge = gridToScreen({ x: 0, y: 1 }, origin);
+		const result = moveWithCollision(nearEdge, { x: -500, y: -500 }, map, 12);
 
-		expect(movement.update({ x: 0, y: 0 }, 500)).toEqual({ x: 50, y: 0 });
-		expect(movement.isMoving).toBe(true);
-		expect(movement.update({ x: 50, y: 0 }, 500)).toEqual({ x: 100, y: 0 });
-		expect(movement.isMoving).toBe(false);
+		expect(canOccupyWorldPosition(result, map, 12)).toBe(true);
+		expect(result.x).not.toBe(nearEdge.x - 500);
 	});
 
-	it('replaces an active route with a new pointer target', () => {
-		const movement = new MovementSystem(100);
-		movement.setPath([
-			{ grid: { x: 0, y: 0 }, screen: { x: 0, y: 0 } },
-			{ grid: { x: 1, y: 0 }, screen: { x: 100, y: 0 } }
-		]);
-		const midway = movement.update({ x: 0, y: 0 }, 250);
-		expect(midway).toEqual({ x: 25, y: 0 });
+	it('blocks occupied footprints while allowing free positions', () => {
+		expect(canOccupyWorldPosition(gridToScreen({ x: 2, y: 2 }, origin), map, 12)).toBe(false);
+		expect(canOccupyWorldPosition(gridToScreen({ x: 1, y: 1 }, origin), map, 12)).toBe(true);
+	});
 
-		movement.setPath([
-			{ grid: { x: 0, y: 0 }, screen: midway },
-			{ grid: { x: 0, y: 1 }, screen: { x: 25, y: 100 } }
-		]);
+	it('slides along a blocked footprint when one movement axis remains open', () => {
+		const start = gridToScreen({ x: 1.1, y: 2 }, origin);
+		const result = moveWithCollision(start, { x: 90, y: 55 }, map, 10);
 
-		expect(movement.targetGrid).toEqual({ x: 0, y: 1 });
-		expect(movement.update(midway, 250)).toEqual({ x: 25, y: 25 });
-		expect(movement.isMoving).toBe(true);
+		expect(result.moved).toBe(true);
+		expect(result.y).toBeGreaterThan(start.y);
+		expect(canOccupyWorldPosition(result, map, 10)).toBe(true);
+	});
+
+	it('uses substeps so a large delta cannot tunnel through a blocked cell', () => {
+		const start = gridToScreen({ x: 1, y: 2 }, origin);
+		const result = moveWithCollision(start, { x: 180, y: 90 }, map, 10);
+		const blockedCenter = gridToScreen({ x: 2, y: 2 }, origin);
+
+		expect(canOccupyWorldPosition(result, map, 10)).toBe(true);
+		expect(result.x).toBeLessThan(blockedCenter.x + 64);
 	});
 });
