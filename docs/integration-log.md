@@ -92,4 +92,8 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   `ResourceStore.transferTo` for Agent 5 incremental funding.
 - Collection and drop-zone transfers are automatic at timed proximity ticks;
   movement input remains live throughout.
+- Verification passed: 82 unit tests, 12 asset tests, 21-asset validation,
+  frozen-lock Docker typecheck/build, desktop gameplay loop, and 320x480
+  collect/carry/deposit/exchange/restart QA with no browser console errors.
+- Visual evidence: `docs/evidence/agent-4/`.
 
