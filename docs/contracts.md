@@ -58,6 +58,8 @@ The typed `GameEventBus` publishes:
 - `resource:changed`
 - `building:unlocked`
 - `wave:changed`
+- `station:changed`
+- `economy:transfer`
 
 Gameplay systems should subscribe through the returned unsubscribe function
 and release subscriptions during scene or object shutdown.
@@ -65,4 +67,16 @@ and release subscriptions during scene or object shutdown.
 `GameState.reset()` emits `resource:changed` for each non-zero resource and
 `wave:changed` when a non-zero wave returns to zero, followed by one final
 `state:changed` snapshot. This keeps field-specific consumers synchronized.
+
+## Economy
+
+Collection is automatic and interval-based while the player remains within a
+resource station's proximity radius. Drop zones use the same automatic timed
+transfer behavior so joystick and keyboard movement never pauses for an action.
+
+`EconomySystem.canAfford(cost)` and `EconomySystem.spend(cost)` accept typed
+multi-resource costs. Spending is atomic: an unaffordable cost changes nothing
+and returns all missing amounts. `ResourceStore.transferTo` supports bounded
+partial transfers for future incremental build-pad funding without coupling the
+economy to a building implementation.
 

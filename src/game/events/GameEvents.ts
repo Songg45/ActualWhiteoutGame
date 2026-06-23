@@ -13,6 +13,21 @@ export interface GameEventMap {
 	'wave:changed': {
 		wave: number;
 	};
+	'station:changed': {
+		stationId: string;
+		resource: Extract<ResourceType, 'wood' | 'meat'>;
+		value: number;
+		capacity: number;
+		delta: number;
+		ready: boolean;
+	};
+	'economy:transfer': {
+		source: string;
+		destination: string;
+		resource: ResourceType;
+		amount: number;
+		reward?: number;
+	};
 }
 
 type EventName = keyof GameEventMap;

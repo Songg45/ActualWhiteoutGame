@@ -84,3 +84,12 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   clean frozen-lock Docker build/typecheck, and desktop/mobile movement,
   collision, resize, release-stop, and console smoke checks.
 
+## 2026-06-23 - Agent 4 Economy Contract (Pending Review)
+
+- Branch: `codex/resources-economy`
+- Added typed `station:changed` and `economy:transfer` events.
+- Added atomic typed multi-resource affordability/spend APIs and bounded
+  `ResourceStore.transferTo` for Agent 5 incremental funding.
+- Collection and drop-zone transfers are automatic at timed proximity ticks;
+  movement input remains live throughout.
+

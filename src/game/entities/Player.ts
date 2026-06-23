@@ -4,6 +4,7 @@ import type { BuiltMap } from '../map/MapBuilder';
 import { gridToScreen, screenToGrid, type GridPoint } from '../map/IsoMath';
 import {
 	CarryStackSystem,
+	type CarryCounts,
 } from '../systems/CarryStackSystem';
 import {
 	createMarkerInteractables,
@@ -62,6 +63,10 @@ export class Player extends Phaser.GameObjects.Container {
 
 	get gridPosition(): GridPoint {
 		return screenToGrid({ x: this.x, y: this.y }, this.map.origin);
+	}
+
+	get carrySnapshot(): Readonly<CarryCounts> {
+		return this.carry.snapshot;
 	}
 
 	setMovementDirection(direction: MovementDirection): void {
