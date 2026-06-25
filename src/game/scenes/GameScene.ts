@@ -71,9 +71,10 @@ export class GameScene extends Phaser.Scene {
 				if (!this.interactionPrompt) {
 					return;
 				}
+				const prompt = interactable ? this.getInteractionPrompt(interactable.id) : '';
 				this.interactionPrompt
-					.setText(interactable ? this.getInteractionPrompt(interactable.id) : '')
-					.setVisible(Boolean(interactable));
+					.setText(prompt)
+					.setVisible(prompt.length > 0);
 			}
 		});
 		this.economy = new EconomySystem(
@@ -161,7 +162,7 @@ export class GameScene extends Phaser.Scene {
 			return 'Auto-collecting while nearby';
 		}
 		if (id.endsWith('-pad')) {
-			return 'Auto-building from carry, then storage';
+			return '';
 		}
 		return `Near ${id}`;
 	}
