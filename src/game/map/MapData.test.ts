@@ -21,14 +21,19 @@ describe('snowy camp map data', () => {
 		expect(new Set(ids).size).toBe(ids.length);
 	});
 
-	it('keeps gates open while fences, trees, and rocks block movement', () => {
+	it('keeps gates and trees open while fences and rocks block movement', () => {
 		const blocked = getBlockedGridKeys(map);
+		const tree = map.environment.find((object) => object.id === 'tree-0');
+		const rock = map.environment.find((object) => object.id === 'rock-0');
 
 		expect(blocked.has(gridKey({ x: 3, y: 3 }))).toBe(true);
-		expect(blocked.has(gridKey({ x: 0, y: 1 }))).toBe(true);
+		expect(blocked.has(gridKey({ x: 0, y: 1 }))).toBe(false);
+		expect(blocked.has(gridKey({ x: 2, y: 3 }))).toBe(true);
 		expect(blocked.has(gridKey({ x: 6.5, y: 3 }))).toBe(false);
 		expect(blocked.has(gridKey({ x: 10, y: 6.5 }))).toBe(false);
 		expect(blocked.has(gridKey({ x: 7, y: 10 }))).toBe(false);
+		expect(tree?.blockedFootprint).toHaveLength(0);
+		expect(rock?.blockedFootprint).toEqual([{ x: 0, y: 0 }]);
 	});
 
 	it('provides lanes that enter camp through declared gates', () => {
