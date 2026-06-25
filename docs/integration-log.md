@@ -97,3 +97,15 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   collect/carry/deposit/exchange/restart QA with no browser console errors.
 - Visual evidence: `docs/evidence/agent-4/`.
 
+## 2026-06-24 - Agent 5 Building Progression Contract (Pending Review)
+
+- Branch: `codex/building-progression`
+- Added data-driven build definitions, build-pad state contracts, inert
+  completion records, and a progression query for completed turret/trap
+  placements.
+- `GameState.snapshot.unlockedBuildings` remains an availability/unlock list;
+  defense agents should query completed placements through
+  `ProgressionSystem.getCompletedDefensePlacements()`.
+- Worker automation should use the `worker-hut` unlock hook until Agent 6 owns
+  behavior.
+

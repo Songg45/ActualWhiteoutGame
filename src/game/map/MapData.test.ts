@@ -41,11 +41,12 @@ describe('snowy camp map data', () => {
 
 	it('declares future economy and defense markers without behavior', () => {
 		expect(map.markers.map((marker) => marker.id)).toEqual([
-			'campfire',
+			'furnace-pad',
 			'wood-station',
 			'meat-station',
 			'turret-pad',
-			'trap-pad'
+			'trap-pad',
+			'worker-hut-pad'
 		]);
 	});
 });

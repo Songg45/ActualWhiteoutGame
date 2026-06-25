@@ -30,6 +30,10 @@ const MAP_COLORS = {
 	label: '#17384c'
 } as const;
 
+function vectorPoint(x: number, y: number): Phaser.Math.Vector2 {
+	return new Phaser.Math.Vector2(x, y);
+}
+
 export interface MapScreenBounds {
 	x: number;
 	y: number;
@@ -64,7 +68,7 @@ export class MapBuilder {
 
 		this.drawSpawnLanes(lanes);
 
-		for (const marker of this.data.markers) {
+		for (const marker of this.data.markers.filter((marker) => marker.kind !== 'build-pad')) {
 			markerObjects.push(this.createMarker(marker));
 		}
 
@@ -99,12 +103,12 @@ export class MapBuilder {
 		tile: TerrainTile
 	): void {
 		const corners = getTileDiamond(tile.grid, this.origin);
-		const points = corners.map(({ x, y }) => new Phaser.Geom.Point(x, y));
+		const points = corners.map(({ x, y }) => vectorPoint(x, y));
 
 		if (tile.kind === 'camp') {
 			graphics
 				.fillStyle(MAP_COLORS.campEdge)
-				.fillPoints(points.map((point) => new Phaser.Geom.Point(point.x, point.y + 6)), true)
+				.fillPoints(points.map((point) => vectorPoint(point.x, point.y + 6)), true)
 				.fillStyle(MAP_COLORS.camp)
 				.fillPoints(points, true)
 				.lineStyle(1, MAP_COLORS.campLight, 0.22)
@@ -114,7 +118,7 @@ export class MapBuilder {
 
 		graphics
 			.fillStyle(MAP_COLORS.snowEdge)
-			.fillPoints(points.map((point) => new Phaser.Geom.Point(point.x, point.y + 4)), true)
+			.fillPoints(points.map((point) => vectorPoint(point.x, point.y + 4)), true)
 			.fillStyle(MAP_COLORS.snow)
 			.fillPoints(points, true)
 			.lineStyle(1, 0xffffff, 0.34)
@@ -187,7 +191,7 @@ export class MapBuilder {
 			}
 		} else {
 			const diamond = getTileDiamond({ x: 0, y: 0 });
-			const points = diamond.map(({ x, y }) => new Phaser.Geom.Point(x * 0.75, y * 0.75));
+			const points = diamond.map(({ x, y }) => vectorPoint(x * 0.75, y * 0.75));
 			graphics
 				.fillStyle(MAP_COLORS.pad, 0.72)
 				.fillPoints(points, true)

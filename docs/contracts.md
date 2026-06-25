@@ -80,3 +80,18 @@ and returns all missing amounts. `ResourceStore.transferTo` supports bounded
 partial transfers for future incremental build-pad funding without coupling the
 economy to a building implementation.
 
+## Buildings And Progression
+
+Build pads are data-driven through `BUILDING_DEFINITIONS` in
+`src/game/buildings/BuildingTypes.ts` and map `build-pad` markers. Runtime pad
+state is one of `locked`, `available`, `partially-funded`, `constructing`, or
+`complete`.
+
+`ProgressionSystem.getCompletedDefensePlacements()` returns completed inert
+turret and trap placements for future combat/defense systems. Use this for
+placement queries; `GameState.snapshot.unlockedBuildings` indicates availability
+unlocks, not completed construction.
+
+Worker automation should gate on `ProgressionSystem.isWorkerHutUnlocked()` or
+the `worker-hut` building unlock until Agent 6 adds worker behavior.
+

@@ -22,7 +22,7 @@ export interface MapMarker {
 	kind: MarkerKind;
 	grid: GridPoint;
 	label: string;
-	variant?: 'wood' | 'meat' | 'turret' | 'trap' | 'furnace';
+	variant?: 'wood' | 'meat' | 'turret' | 'trap' | 'furnace' | 'worker-hut';
 }
 
 export interface SpawnLane {
@@ -164,10 +164,11 @@ export function createMapData(): MapData {
 		],
 		markers: [
 			{
-				id: 'campfire',
-				kind: 'campfire',
+				id: 'furnace-pad',
+				kind: 'build-pad',
 				grid: { x: 7, y: 7 },
-				label: 'Warmth'
+				label: 'Furnace',
+				variant: 'furnace'
 			},
 			{
 				id: 'wood-station',
@@ -196,6 +197,13 @@ export function createMapData(): MapData {
 				grid: { x: 6, y: 5 },
 				label: 'Trap',
 				variant: 'trap'
+			},
+			{
+				id: 'worker-hut-pad',
+				kind: 'build-pad',
+				grid: { x: 5.2, y: 8.9 },
+				label: 'Hut',
+				variant: 'worker-hut'
 			}
 		],
 		spawnLanes: [
