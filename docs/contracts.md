@@ -54,6 +54,20 @@ separate from visual forest density. Rocks, fences, bounds, and existing
 build/economy objects remain authoritative blockers where their systems declare
 collision.
 
+## Map Runtime
+
+Playable maps are authored as `MapRecipe` data and built through `MapRuntime`.
+Recipes must include at least one `furnace`, `enemy-spawn`, `npc-spawn`,
+`food`, and `wood` anchor. Systems should query anchors through runtime APIs
+such as `getAnchors(kind)`, `requireAnchor(kind)`, `getResourceStations()`,
+`getBuildPads()`, and `getSpawnLanes('enemy')` instead of depending on legacy
+marker IDs.
+
+`camp-01` is the compatibility recipe for the original hand-built map. Its
+runtime still emits current marker IDs such as `wood-station`, `meat-station`,
+and `furnace-pad` so existing interaction, rendering, and prompt code can keep
+working while systems migrate to anchor queries.
+
 ## Foundation State
 
 `GameState` owns the canonical global totals for `wood`, `meat`, and `money`,
@@ -91,9 +105,9 @@ economy to a building implementation.
 ## Buildings And Progression
 
 Build pads are data-driven through `BUILDING_DEFINITIONS` in
-`src/game/buildings/BuildingTypes.ts` and map `build-pad` markers. Runtime pad
-state is one of `locked`, `available`, `partially-funded`, `constructing`, or
-`complete`.
+`src/game/buildings/BuildingTypes.ts` and map runtime build anchors. Runtime
+pad state is one of `locked`, `available`, `partially-funded`, `constructing`,
+or `complete`.
 
 `ProgressionSystem.getCompletedDefensePlacements()` returns completed inert
 turret and trap placements for future combat/defense systems. Use this for

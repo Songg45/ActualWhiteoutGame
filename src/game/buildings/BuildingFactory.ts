@@ -15,6 +15,25 @@ export function createBuildPads(
 	map: BuiltMap,
 	events: GameEventBus
 ): BuildPad[] {
+	const padAnchors = map.runtime?.getBuildPads();
+	if (padAnchors) {
+		return padAnchors.map((anchor) => {
+			const definition = anchor.buildingId
+				? BUILDING_DEFINITIONS.find((candidate) => candidate.id === anchor.buildingId)
+				: getBuildingDefinitionByPadId(anchor.legacyMarkerId ?? anchor.id);
+			if (!definition) {
+				throw new Error(`No building definition found for anchor ${anchor.id}.`);
+			}
+			return new BuildPad(
+				scene,
+				definition,
+				anchor.grid,
+				map.origin,
+				!INITIAL_UNLOCKED_BUILDINGS.includes(definition.id),
+				events
+			);
+		});
+	}
 	return map.data.markers
 		.filter((marker): marker is MapMarker & { kind: 'build-pad' } => marker.kind === 'build-pad')
 		.map((marker) => {

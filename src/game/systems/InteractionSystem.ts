@@ -1,4 +1,5 @@
 import type { MapMarker, MarkerKind } from '../map/MapData';
+import type { MapRuntime } from '../map/MapRuntime';
 import type { GridPoint } from '../map/IsoMath';
 
 export type InteractionKind = Extract<MarkerKind, 'resource-station' | 'build-pad'> | 'drop-zone';
@@ -52,6 +53,23 @@ export function createMarkerInteractables(
 			grid: marker.grid,
 			marker
 		}));
+}
+
+export function createRuntimeInteractables(runtime: MapRuntime): Interactable[] {
+	const buildPads: Interactable[] = runtime.getBuildPads()
+		.map((anchor): Interactable => ({
+			id: anchor.legacyMarkerId ?? anchor.id,
+			kind: 'build-pad',
+			grid: anchor.grid,
+			marker: runtime.data.markers.find((marker) => marker.id === anchor.legacyMarkerId)
+		}));
+	const resourceStations: Interactable[] = runtime.getResourceStations().map((station): Interactable => ({
+		id: station.id,
+		kind: 'resource-station',
+		grid: station.grid,
+		marker: runtime.data.markers.find((marker) => marker.id === station.id)
+	}));
+	return [...buildPads, ...resourceStations];
 }
 
 export class InteractionSystem {

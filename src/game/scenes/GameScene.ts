@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { DEPTH_LAYERS, GAME_COLORS, SCENE_KEYS, WORLD_BOUNDS } from '../config';
 import { Player } from '../entities/Player';
 import { MapBuilder, type BuiltMap } from '../map/MapBuilder';
-import { createMapData } from '../map/MapData';
+import { MapRuntime } from '../map/MapRuntime';
+import { camp01Recipe } from '../map/recipes/camp01';
 import { gameState } from '../state/GameState';
 import { EconomySystem } from '../systems/EconomySystem';
 import { MovementInputController } from '../systems/MovementInputController';
@@ -60,10 +61,12 @@ export class GameScene extends Phaser.Scene {
 			.fillStyle(0xffffff, 0.2)
 			.fillEllipse(WORLD_BOUNDS.width / 2, 530, 1680, 900);
 
+		const mapRuntime = new MapRuntime(camp01Recipe);
 		this.builtMap = new MapBuilder(
 			this,
-			createMapData(),
-			{ x: WORLD_BOUNDS.width / 2, y: 130 }
+			mapRuntime.data,
+			{ x: WORLD_BOUNDS.width / 2, y: 130 },
+			mapRuntime
 		).build();
 		this.player = new Player(this, this.builtMap, {
 			spawnGrid: { x: 7, y: 8 },

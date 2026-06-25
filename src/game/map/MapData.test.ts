@@ -1,8 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { createMapData, getBlockedGridKeys, gridKey } from './MapData';
+import { camp01Recipe } from './recipes/camp01';
 
 describe('snowy camp map data', () => {
 	const map = createMapData();
+
+	it('is generated from the camp-01 recipe', () => {
+		expect(camp01Recipe.id).toBe('camp-01');
+		expect(camp01Recipe.anchors.map((anchor) => anchor.kind)).toEqual([
+			'furnace',
+			'wood',
+			'food',
+			'storage',
+			'exchange',
+			'defense-slot',
+			'defense-slot',
+			'worker-hut',
+			'enemy-spawn',
+			'enemy-spawn',
+			'npc-spawn'
+		]);
+	});
 
 	it('covers the declared map dimensions with terrain', () => {
 		expect(map.width).toBe(14);

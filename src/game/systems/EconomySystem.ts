@@ -126,10 +126,12 @@ export class EconomySystem {
 		transferIntervalMs = 350
 	) {
 		this.transferClock = new ProximityTransferClock(transferIntervalMs);
-		this.stations = RESOURCE_STATION_DEFINITIONS.map(
+		const stationDefinitions = map.runtime?.getResourceStations() ?? RESOURCE_STATION_DEFINITIONS;
+		const dropZoneDefinitions = map.runtime?.getDropZones() ?? DROP_ZONE_DEFINITIONS;
+		this.stations = stationDefinitions.map(
 			(definition) => new ResourceStation(scene, definition, map.origin, events)
 		);
-		this.dropZones = DROP_ZONE_DEFINITIONS.map(
+		this.dropZones = dropZoneDefinitions.map(
 			(definition) => new DropZone(scene, definition, map.origin, state, events)
 		);
 		player.setDropZones(this.dropZones.map(({ interactable }) => interactable));
