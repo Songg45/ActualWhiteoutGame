@@ -16,6 +16,10 @@ const COLORS = {
 	gate: 0xe0a054
 } as const;
 
+function vectorPoint(x: number, y: number): Phaser.Math.Vector2 {
+	return new Phaser.Math.Vector2(x, y);
+}
+
 export class EnvironmentObject extends Phaser.GameObjects.Container {
 	readonly definition: EnvironmentDefinition;
 	readonly basePoint: ScreenPoint;
@@ -94,18 +98,18 @@ export class EnvironmentObject extends Phaser.GameObjects.Container {
 			.fillEllipse(0, 4, 86, 28)
 			.fillStyle(COLORS.rock)
 			.fillPoints([
-				new Phaser.Geom.Point(-40, 0),
-				new Phaser.Geom.Point(-29, -35),
-				new Phaser.Geom.Point(5, -51),
-				new Phaser.Geom.Point(38, -25),
-				new Phaser.Geom.Point(42, 0)
+				vectorPoint(-40, 0),
+				vectorPoint(-29, -35),
+				vectorPoint(5, -51),
+				vectorPoint(38, -25),
+				vectorPoint(42, 0)
 			], true)
 			.fillStyle(COLORS.rockLight)
 			.fillPoints([
-				new Phaser.Geom.Point(-27, -34),
-				new Phaser.Geom.Point(5, -51),
-				new Phaser.Geom.Point(13, -19),
-				new Phaser.Geom.Point(-12, -9)
+				vectorPoint(-27, -34),
+				vectorPoint(5, -51),
+				vectorPoint(13, -19),
+				vectorPoint(-12, -9)
 			], true)
 			.fillStyle(COLORS.snow)
 			.fillEllipse(-4, -39, 47, 17);
