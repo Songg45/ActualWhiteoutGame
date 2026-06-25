@@ -95,7 +95,7 @@ function createForest(): EnvironmentDefinition[] {
 			id: `tree-${index}`,
 			kind: 'tree',
 			grid,
-			blockedFootprint: SINGLE_CELL_FOOTPRINT
+			blockedFootprint: OPEN_FOOTPRINT
 		})),
 		...rockPoints.map((grid, index): EnvironmentDefinition => ({
 			id: `rock-${index}`,

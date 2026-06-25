@@ -46,6 +46,14 @@ container.setDepth(baseY);
 Foundation owns this authoritative runtime geometry. Art and map branches must
 align their assets and placement logic to these values.
 
+## Map Collision
+
+Ordinary trees are decorative and pass-through: they may add visual forest
+density, but they must not contribute blocked grid cells. Boundary collision is
+separate from visual forest density. Rocks, fences, bounds, and existing
+build/economy objects remain authoritative blockers where their systems declare
+collision.
+
 ## Foundation State
 
 `GameState` owns the canonical global totals for `wood`, `meat`, and `money`,
