@@ -64,7 +64,7 @@ export class MapBuilder {
 
 		this.drawSpawnLanes(lanes);
 
-		for (const marker of this.data.markers) {
+		for (const marker of this.data.markers.filter((marker) => marker.kind !== 'build-pad')) {
 			markerObjects.push(this.createMarker(marker));
 		}
 

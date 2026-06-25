@@ -6,6 +6,7 @@ import { createMapData } from '../map/MapData';
 import { gameState } from '../state/GameState';
 import { EconomySystem } from '../systems/EconomySystem';
 import { MovementInputController } from '../systems/MovementInputController';
+import { ProgressionSystem } from '../systems/ProgressionSystem';
 
 export class GameScene extends Phaser.Scene {
 	private backdrop?: Phaser.GameObjects.Graphics;
@@ -14,6 +15,7 @@ export class GameScene extends Phaser.Scene {
 	private interactionPrompt?: Phaser.GameObjects.Text;
 	private movementInput?: MovementInputController;
 	private economy?: EconomySystem;
+	private progression?: ProgressionSystem;
 
 	constructor() {
 		super(SCENE_KEYS.game);
@@ -34,6 +36,7 @@ export class GameScene extends Phaser.Scene {
 		this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
 			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 			this.movementInput?.destroy();
+			this.progression?.destroy();
 			this.economy?.destroy();
 			this.player?.destroy();
 			this.builtMap?.destroy();
@@ -45,6 +48,7 @@ export class GameScene extends Phaser.Scene {
 		this.player?.setMovementDirection(this.movementInput?.direction ?? { x: 0, y: 0 });
 		this.player?.update(time, delta);
 		this.economy?.update(delta);
+		this.progression?.update(delta);
 		this.layoutInteractionPrompt();
 	}
 
@@ -76,6 +80,20 @@ export class GameScene extends Phaser.Scene {
 			this,
 			this.player,
 			this.builtMap,
+			{
+				atPlayer: (text, color) => {
+					if (this.player) {
+						this.createFloatingText(this.player.x, this.player.y - 110, text, color);
+					}
+				},
+				atWorld: (x, y, text, color) => this.createFloatingText(x, y, text, color)
+			}
+		);
+		this.progression = new ProgressionSystem(
+			this,
+			this.player,
+			this.builtMap,
+			this.economy,
 			{
 				atPlayer: (text, color) => {
 					if (this.player) {
@@ -141,6 +159,9 @@ export class GameScene extends Phaser.Scene {
 		}
 		if (id === 'wood-station' || id === 'meat-station') {
 			return 'Auto-collecting while nearby';
+		}
+		if (id.endsWith('-pad')) {
+			return 'Auto-building from carry, then storage';
 		}
 		return `Near ${id}`;
 	}
