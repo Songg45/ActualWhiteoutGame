@@ -46,6 +46,50 @@ function validateUniqueIds(
 	}
 }
 
+function validateUniqueRuntimeIds(recipe: MapRecipe, errors: string[]): void {
+	const seen = new Map<string, string>();
+	const runtimeItems = [
+		...recipe.scenery.map((item) => ({ id: item.id, label: 'scenery' })),
+		...recipe.blockers.map((item) => ({ id: item.id, label: 'blocker' })),
+		...recipe.anchors.map((item) => ({ id: item.id, label: 'anchor' })),
+		...recipe.spawnLanes.map((item) => ({ id: item.id, label: 'spawn lane' }))
+	];
+
+	for (const item of runtimeItems) {
+		if (!item.id.trim()) {
+			continue;
+		}
+		const existing = seen.get(item.id);
+		if (existing) {
+			errors.push(
+				`Duplicate runtime map id: ${item.id} used by ${existing} and ${item.label}.`
+			);
+			continue;
+		}
+		seen.set(item.id, item.label);
+	}
+}
+
+function validateUniqueLegacyMarkerIds(
+	anchors: readonly GameplayAnchor[],
+	errors: string[]
+): void {
+	const seen = new Map<string, string>();
+	for (const anchor of anchors) {
+		if (!anchor.markerKind || !anchor.legacyMarkerId?.trim()) {
+			continue;
+		}
+		const existing = seen.get(anchor.legacyMarkerId);
+		if (existing) {
+			errors.push(
+				`Duplicate legacy marker id: ${anchor.legacyMarkerId} used by anchors ${existing} and ${anchor.id}.`
+			);
+			continue;
+		}
+		seen.set(anchor.legacyMarkerId, anchor.id);
+	}
+}
+
 function validatePoint(
 	errors: string[],
 	recipe: MapRecipe,
@@ -154,6 +198,8 @@ export function validateMapRecipe(recipe: MapRecipe): MapRecipeValidationResult 
 	validateUniqueIds(errors, 'blocker', recipe.blockers);
 	validateUniqueIds(errors, 'anchor', recipe.anchors);
 	validateUniqueIds(errors, 'spawn lane', recipe.spawnLanes);
+	validateUniqueRuntimeIds(recipe, errors);
+	validateUniqueLegacyMarkerIds(recipe.anchors, errors);
 
 	for (const region of recipe.terrain.regions) {
 		validateTerrainRegion(errors, recipe, region);
