@@ -7,6 +7,12 @@ import type { GridPoint } from '../map/IsoMath';
 import { MapRuntime } from '../map/MapRuntime';
 import { camp01Recipe } from '../map/recipes/camp01';
 import { gameState } from '../state/GameState';
+import type { DamageSource, DeathReward } from '../combat/CombatTypes';
+import {
+	applyCombatDamage,
+	findNearestTarget,
+	type DamageResult
+} from '../systems/CombatSystem';
 import { EconomySystem } from '../systems/EconomySystem';
 import {
 	advanceEnemyPath,
@@ -41,6 +47,8 @@ export class GameScene extends Phaser.Scene {
 	private activeEnemies: ActiveEnemy[] = [];
 	private firstWaveTimer?: Phaser.Time.TimerEvent;
 	private devWaveKey?: Phaser.Input.Keyboard.Key;
+	private attackKey?: Phaser.Input.Keyboard.Key;
+	private lastPlayerAttackAt = Number.NEGATIVE_INFINITY;
 
 	constructor() {
 		super(SCENE_KEYS.game);
@@ -65,6 +73,7 @@ export class GameScene extends Phaser.Scene {
 			this.economy?.destroy();
 			this.firstWaveTimer?.remove(false);
 			this.devWaveKey?.destroy();
+			this.attackKey?.destroy();
 			for (const active of this.activeEnemies) {
 				active.enemy.destroy();
 			}
@@ -146,6 +155,10 @@ export class GameScene extends Phaser.Scene {
 				this.startNextWave(this.time.now);
 			}
 		});
+		this.attackKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+		this.attackKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+			this.tryPlayerAttack(this.time.now);
+		});
 		this.interactionPrompt = this.add.text(0, 0, '', {
 			color: '#17384c',
 			backgroundColor: 'rgba(255,255,255,0.9)',
@@ -207,6 +220,28 @@ export class GameScene extends Phaser.Scene {
 			return '';
 		}
 		return `Near ${id}`;
+	}
+
+	getCombatTargets(): readonly Enemy[] {
+		return this.activeEnemies
+			.filter((active) => !active.reachedObjective && !active.enemy.isDead())
+			.map((active) => active.enemy);
+	}
+
+	applyDamageToEnemy(
+		enemyId: string,
+		amount: number,
+		source: DamageSource = 'defense'
+	): DamageResult | undefined {
+		const active = this.activeEnemies.find((candidate) => candidate.enemy.id === enemyId);
+		if (!active || active.reachedObjective) {
+			return undefined;
+		}
+		const result = applyCombatDamage(active.enemy, amount, source);
+		if (result.killed) {
+			this.grantEnemyRewards(active.enemy);
+		}
+		return result;
 	}
 
 	private startNextWave(time: number): void {
@@ -290,6 +325,39 @@ export class GameScene extends Phaser.Scene {
 			}
 		}
 		this.activeEnemies = remaining;
+	}
+
+	private tryPlayerAttack(time: number): void {
+		if (!this.player || time - this.lastPlayerAttackAt < 450) {
+			return;
+		}
+		const target = findNearestTarget(this.getCombatTargets(), this.player, 125);
+		if (!target) {
+			return;
+		}
+		this.lastPlayerAttackAt = time;
+		const result = this.applyDamageToEnemy(target.id, 18, 'player');
+		if (result && result.applied > 0) {
+			this.createFloatingText(target.x, target.y - 82, `-${result.applied}`, '#8f2d2d');
+		}
+	}
+
+	private grantEnemyRewards(enemy: Enemy): void {
+		const rewards = enemy.model.rewards;
+		for (const reward of rewards) {
+			this.grantEnemyReward(enemy, reward);
+		}
+	}
+
+	private grantEnemyReward(enemy: Enemy, reward: DeathReward): void {
+		const applied = gameState.changeResource(reward.resource, reward.amount);
+		if (applied <= 0) {
+			return;
+		}
+		const label = reward.resource === 'money'
+			? `+$${applied}`
+			: `+${applied} ${reward.resource}`;
+		this.createFloatingText(enemy.x, enemy.y - 112, label, '#23814d');
 	}
 
 	private createFloatingText(x: number, y: number, text: string, color: string): void {

@@ -48,6 +48,10 @@ export class Enemy extends Phaser.GameObjects.Container implements Damageable {
 		return this.model.hp;
 	}
 
+	get id(): string {
+		return this.model.id;
+	}
+
 	get maxHp(): number {
 		return this.model.maxHp;
 	}
