@@ -21,6 +21,7 @@ import {
 	type EnemyPathState
 } from '../systems/EnemyMovementSystem';
 import { grantDeathRewards, type AppliedDeathReward } from '../systems/EnemyRewardSystem';
+import { mobileAttackButtonLayout } from '../systems/MobileAttackButton';
 import { MovementInputController } from '../systems/MovementInputController';
 import { ProgressionSystem } from '../systems/ProgressionSystem';
 import { WaveSystem, type WaveSpawnPlan } from '../systems/WaveSystem';
@@ -53,6 +54,9 @@ export class GameScene extends Phaser.Scene {
 	private firstWaveTimer?: Phaser.Time.TimerEvent;
 	private devWaveKey?: Phaser.Input.Keyboard.Key;
 	private attackKey?: Phaser.Input.Keyboard.Key;
+	private attackButtonGraphic?: Phaser.GameObjects.Graphics;
+	private attackButtonLabel?: Phaser.GameObjects.Text;
+	private attackButtonHitArea?: Phaser.GameObjects.Zone;
 	private lastPlayerAttackAt = Number.NEGATIVE_INFINITY;
 
 	constructor() {
@@ -79,6 +83,9 @@ export class GameScene extends Phaser.Scene {
 			this.firstWaveTimer?.remove(false);
 			this.devWaveKey?.destroy();
 			this.attackKey?.destroy();
+			this.attackButtonGraphic?.destroy();
+			this.attackButtonLabel?.destroy();
+			this.attackButtonHitArea?.destroy();
 			for (const active of this.activeEnemies) {
 				active.enemy.destroy();
 			}
@@ -164,6 +171,7 @@ export class GameScene extends Phaser.Scene {
 		this.attackKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
 			this.tryPlayerAttack(this.time.now);
 		});
+		this.createMobileAttackButton();
 		this.interactionPrompt = this.add.text(0, 0, '', {
 			color: '#17384c',
 			backgroundColor: 'rgba(255,255,255,0.9)',
@@ -194,6 +202,7 @@ export class GameScene extends Phaser.Scene {
 			1
 		);
 		this.cameras.main.setZoom(zoom);
+		this.layoutMobileAttackButton();
 		if (this.player) {
 			this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 		} else {
@@ -225,6 +234,60 @@ export class GameScene extends Phaser.Scene {
 			return '';
 		}
 		return `Near ${id}`;
+	}
+
+	private createMobileAttackButton(): void {
+		this.attackButtonGraphic = this.add.graphics()
+			.setScrollFactor(0)
+			.setDepth(DEPTH_LAYERS.ui + 10);
+		this.attackButtonLabel = this.add.text(0, 0, 'ATK', {
+			color: '#17384c',
+			fontFamily: 'Arial, sans-serif',
+			fontSize: '13px',
+			fontStyle: 'bold'
+		})
+			.setOrigin(0.5)
+			.setScrollFactor(0)
+			.setDepth(DEPTH_LAYERS.ui + 11);
+		this.attackButtonHitArea = this.add.zone(0, 0, 76, 76)
+			.setScrollFactor(0)
+			.setDepth(DEPTH_LAYERS.ui + 12)
+			.setInteractive({ useHandCursor: true });
+		this.attackButtonHitArea.on(Phaser.Input.Events.POINTER_DOWN, (
+			pointer: Phaser.Input.Pointer,
+			_localX: number,
+			_localY: number,
+			event: Phaser.Types.Input.EventData
+		) => {
+			pointer.event?.preventDefault();
+			event.stopPropagation();
+			this.tryPlayerAttack(this.time.now);
+		});
+		this.layoutMobileAttackButton();
+	}
+
+	private layoutMobileAttackButton(): void {
+		if (!this.attackButtonGraphic || !this.attackButtonLabel || !this.attackButtonHitArea) {
+			return;
+		}
+		const layout = mobileAttackButtonLayout({
+			width: this.scale.width,
+			height: this.scale.height
+		});
+		this.attackButtonGraphic
+			.clear()
+			.fillStyle(GAME_COLORS.warmth, 0.9)
+			.fillCircle(layout.x, layout.y, layout.radius)
+			.lineStyle(3, 0x17384c, 0.35)
+			.strokeCircle(layout.x, layout.y, layout.radius)
+			.lineStyle(5, 0xffffff, 0.76)
+			.lineBetween(layout.x - 11, layout.y + 12, layout.x + 13, layout.y - 15)
+			.lineStyle(4, 0x17384c, 0.55)
+			.lineBetween(layout.x - 15, layout.y - 1, layout.x - 1, layout.y + 13);
+		this.attackButtonLabel.setPosition(layout.x, layout.y + 18);
+		this.attackButtonHitArea
+			.setPosition(layout.x, layout.y)
+			.setSize(layout.radius * 2 + 8, layout.radius * 2 + 8);
 	}
 
 	getCombatTargets(): readonly Enemy[] {
