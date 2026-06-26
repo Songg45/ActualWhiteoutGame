@@ -8,6 +8,7 @@ import {
 } from '../systems/CarryStackSystem';
 import {
 	createMarkerInteractables,
+	createRuntimeInteractables,
 	InteractionSystem,
 	type DropZoneInteractable,
 	type Interactable
@@ -51,7 +52,9 @@ export class Player extends Phaser.GameObjects.Container {
 
 		this.carry = new CarryStackSystem(scene, this);
 		this.interactions = new InteractionSystem(
-			createMarkerInteractables(map.data.markers),
+			map.runtime
+				? createRuntimeInteractables(map.runtime)
+				: createMarkerInteractables(map.data.markers),
 			({ current }) => options.onInteractionChange?.(current)
 		);
 		this.updateDepth();

@@ -7,6 +7,7 @@ import {
 	type MapMarker,
 	type TerrainTile
 } from './MapData';
+import type { MapRuntime } from './MapRuntime';
 import {
 	getTileDiamond,
 	gridToScreen,
@@ -43,6 +44,7 @@ export interface MapScreenBounds {
 
 export interface BuiltMap {
 	readonly data: MapData;
+	readonly runtime?: MapRuntime;
 	readonly origin: ScreenPoint;
 	readonly bounds: MapScreenBounds;
 	readonly blockedGridKeys: ReadonlySet<string>;
@@ -53,7 +55,8 @@ export class MapBuilder {
 	constructor(
 		private readonly scene: Phaser.Scene,
 		private readonly data: MapData,
-		private readonly origin: ScreenPoint
+		private readonly origin: ScreenPoint,
+		private readonly runtime?: MapRuntime
 	) {}
 
 	build(): BuiltMap {
@@ -82,6 +85,7 @@ export class MapBuilder {
 
 		return {
 			data: this.data,
+			runtime: this.runtime,
 			origin: this.origin,
 			bounds,
 			blockedGridKeys: getBlockedGridKeys(this.data),
