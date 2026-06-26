@@ -60,8 +60,8 @@ describe('EnemyModel', () => {
 			...bearDefinition,
 			stats: {
 				...bearDefinition.stats,
-				rewards: [{ resource: 'money', amount: Number.POSITIVE_INFINITY }]
+				rewards: [{ resource: 'meat', amount: Number.POSITIVE_INFINITY }]
 			}
-		})).toThrow('Enemy reward amount must be a non-negative finite number.');
+		})).toThrow('Enemy reward amount must be a positive finite number.');
 	});
 });

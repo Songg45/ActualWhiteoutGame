@@ -126,8 +126,7 @@ export class WaveSystem {
 						speed: this.options.baseSpeed,
 						attackDamage: this.options.attackDamage,
 						rewards: [
-							{ resource: 'meat', amount: 1 },
-							{ resource: 'money', amount: wave }
+							{ resource: 'meat', amount: wave }
 						]
 					}
 				}

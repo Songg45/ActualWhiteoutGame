@@ -7,7 +7,7 @@ import type { GridPoint } from '../map/IsoMath';
 import { MapRuntime } from '../map/MapRuntime';
 import { camp01Recipe } from '../map/recipes/camp01';
 import { gameState } from '../state/GameState';
-import type { DamageSource, DeathReward } from '../combat/CombatTypes';
+import type { DamageSource } from '../combat/CombatTypes';
 import {
 	applyCombatDamage,
 	findNearestTarget,
@@ -20,6 +20,7 @@ import {
 	pruneInactiveEnemies,
 	type EnemyPathState
 } from '../systems/EnemyMovementSystem';
+import { grantDeathRewards, type AppliedDeathReward } from '../systems/EnemyRewardSystem';
 import { MovementInputController } from '../systems/MovementInputController';
 import { ProgressionSystem } from '../systems/ProgressionSystem';
 import { WaveSystem, type WaveSpawnPlan } from '../systems/WaveSystem';
@@ -347,20 +348,17 @@ export class GameScene extends Phaser.Scene {
 	}
 
 	private grantEnemyRewards(enemy: Enemy): void {
-		const rewards = enemy.model.rewards;
-		for (const reward of rewards) {
-			this.grantEnemyReward(enemy, reward);
+		for (const reward of grantDeathRewards(gameState, enemy.model.rewards)) {
+			this.showEnemyReward(enemy, reward);
 		}
 	}
 
-	private grantEnemyReward(enemy: Enemy, reward: DeathReward): void {
-		const applied = gameState.changeResource(reward.resource, reward.amount);
-		if (applied <= 0) {
-			return;
-		}
-		const label = reward.resource === 'money'
-			? `+$${applied}`
-			: `+${applied} ${reward.resource}`;
+	private showEnemyReward(enemy: Enemy, reward: AppliedDeathReward): void {
+		const label = reward.resource === 'meat'
+			? `Fresh meat +${reward.applied}`
+			: reward.resource === 'money'
+				? `+$${reward.applied}`
+				: `+${reward.applied} ${reward.resource}`;
 		this.createFloatingText(enemy.x, enemy.y - 112, label, '#23814d');
 	}
 

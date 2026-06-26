@@ -49,7 +49,7 @@ export class EnemyModel implements Damageable {
 		this.speed = speed;
 		this.attackDamage = attackDamage;
 		this.rewards = rewards.map((reward) => {
-			assertFiniteNonNegativeStat(reward.amount, 'Enemy reward amount');
+			assertFinitePositiveStat(reward.amount, 'Enemy reward amount');
 			return { ...reward };
 		});
 	}

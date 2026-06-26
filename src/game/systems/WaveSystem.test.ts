@@ -56,10 +56,7 @@ describe('WaveSystem', () => {
 				maxHp: 25,
 				speed: 60,
 				attackDamage: 4,
-				rewards: [
-					{ resource: 'meat', amount: 1 },
-					{ resource: 'money', amount: 2 }
-				]
+				rewards: [{ resource: 'meat', amount: 2 }]
 			}
 		});
 	});
