@@ -1,13 +1,30 @@
 import Phaser from 'phaser';
 import { DEPTH_LAYERS, GAME_COLORS, SCENE_KEYS, WORLD_BOUNDS } from '../config';
+import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { MapBuilder, type BuiltMap } from '../map/MapBuilder';
+import type { GridPoint } from '../map/IsoMath';
 import { MapRuntime } from '../map/MapRuntime';
 import { camp01Recipe } from '../map/recipes/camp01';
 import { gameState } from '../state/GameState';
 import { EconomySystem } from '../systems/EconomySystem';
+import {
+	advanceEnemyPath,
+	createEnemyPathState,
+	pruneInactiveEnemies,
+	type EnemyPathState
+} from '../systems/EnemyMovementSystem';
 import { MovementInputController } from '../systems/MovementInputController';
 import { ProgressionSystem } from '../systems/ProgressionSystem';
+import { WaveSystem, type WaveSpawnPlan } from '../systems/WaveSystem';
+
+interface ActiveEnemy {
+	readonly enemy: Enemy;
+	readonly path: readonly GridPoint[];
+	pathState: EnemyPathState;
+	reachedObjective: boolean;
+	isDead(): boolean;
+}
 
 export class GameScene extends Phaser.Scene {
 	private backdrop?: Phaser.GameObjects.Graphics;
@@ -17,6 +34,13 @@ export class GameScene extends Phaser.Scene {
 	private movementInput?: MovementInputController;
 	private economy?: EconomySystem;
 	private progression?: ProgressionSystem;
+	private waveSystem?: WaveSystem;
+	private activeWave?: WaveSpawnPlan;
+	private activeWaveStartedAt = 0;
+	private nextSpawnIndex = 0;
+	private activeEnemies: ActiveEnemy[] = [];
+	private firstWaveTimer?: Phaser.Time.TimerEvent;
+	private devWaveKey?: Phaser.Input.Keyboard.Key;
 
 	constructor() {
 		super(SCENE_KEYS.game);
@@ -39,6 +63,12 @@ export class GameScene extends Phaser.Scene {
 			this.movementInput?.destroy();
 			this.progression?.destroy();
 			this.economy?.destroy();
+			this.firstWaveTimer?.remove(false);
+			this.devWaveKey?.destroy();
+			for (const active of this.activeEnemies) {
+				active.enemy.destroy();
+			}
+			this.activeEnemies = [];
 			this.player?.destroy();
 			this.builtMap?.destroy();
 			this.backdrop?.destroy();
@@ -50,6 +80,7 @@ export class GameScene extends Phaser.Scene {
 		this.player?.update(time, delta);
 		this.economy?.update(delta);
 		this.progression?.update(delta);
+		this.updateEnemyWaves(time, delta);
 		this.layoutInteractionPrompt();
 	}
 
@@ -107,6 +138,14 @@ export class GameScene extends Phaser.Scene {
 				atWorld: (x, y, text, color) => this.createFloatingText(x, y, text, color)
 			}
 		);
+		this.waveSystem = new WaveSystem(mapRuntime);
+		this.firstWaveTimer = this.time.delayedCall(30_000, () => this.startNextWave(this.time.now));
+		this.devWaveKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.B);
+		this.devWaveKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+			if (!this.activeWave) {
+				this.startNextWave(this.time.now);
+			}
+		});
 		this.interactionPrompt = this.add.text(0, 0, '', {
 			color: '#17384c',
 			backgroundColor: 'rgba(255,255,255,0.9)',
@@ -168,6 +207,89 @@ export class GameScene extends Phaser.Scene {
 			return '';
 		}
 		return `Near ${id}`;
+	}
+
+	private startNextWave(time: number): void {
+		if (!this.waveSystem) {
+			return;
+		}
+		const wave = gameState.snapshot.wave + 1;
+		this.activeWave = this.waveSystem.createSpawnPlan(wave);
+		this.activeWaveStartedAt = time;
+		this.nextSpawnIndex = 0;
+		gameState.setWave(wave);
+	}
+
+	private updateEnemyWaves(time: number, delta: number): void {
+		this.spawnDueEnemies(time);
+		this.moveActiveEnemies(delta);
+		this.cleanupInactiveEnemies();
+	}
+
+	private spawnDueEnemies(time: number): void {
+		if (!this.activeWave || !this.builtMap) {
+			return;
+		}
+		while (
+			this.nextSpawnIndex < this.activeWave.entries.length
+			&& time - this.activeWaveStartedAt >= this.activeWave.entries[this.nextSpawnIndex].delayMs
+		) {
+			const entry = this.activeWave.entries[this.nextSpawnIndex];
+			const enemy = new Enemy(this, {
+				definition: entry.enemy,
+				spawnGrid: entry.spawnGrid,
+				origin: this.builtMap.origin,
+				textureKey: 'enemy-bear-gray'
+			});
+			const active: ActiveEnemy = {
+				enemy,
+				path: entry.path,
+				pathState: createEnemyPathState(entry.path, this.builtMap.origin),
+				reachedObjective: false,
+				isDead: () => enemy.isDead()
+			};
+			this.activeEnemies.push(active);
+			this.nextSpawnIndex += 1;
+		}
+		if (this.nextSpawnIndex >= this.activeWave.entries.length) {
+			this.activeWave = undefined;
+		}
+	}
+
+	private moveActiveEnemies(delta: number): void {
+		if (!this.builtMap) {
+			return;
+		}
+		for (const active of this.activeEnemies) {
+			if (active.enemy.isDead() || active.reachedObjective) {
+				continue;
+			}
+			active.pathState = advanceEnemyPath(
+				active.pathState,
+				active.path,
+				this.builtMap.origin,
+				active.enemy.model.speed,
+				delta
+			);
+			active.enemy.setBasePosition(active.pathState.position);
+			if (active.pathState.complete) {
+				active.reachedObjective = true;
+			}
+		}
+	}
+
+	private cleanupInactiveEnemies(): void {
+		const remaining = pruneInactiveEnemies(this.activeEnemies);
+		if (remaining.length === this.activeEnemies.length) {
+			return;
+		}
+		const remainingSet = new Set(remaining);
+		for (const active of this.activeEnemies) {
+			if (!remainingSet.has(active)) {
+				active.enemy.destroy();
+			}
+		}
+		this.activeEnemies = remaining;
 	}
 
 	private createFloatingText(x: number, y: number, text: string, color: string): void {

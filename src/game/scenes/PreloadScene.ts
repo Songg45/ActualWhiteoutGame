@@ -43,6 +43,7 @@ export class PreloadScene extends Phaser.Scene {
 		this.load.image('player-blue', '/assets/sprites/characters/player-blue.png');
 		this.load.image('resource-wood-stack', '/assets/sprites/resources/wood-stack.png');
 		this.load.image('resource-meat', '/assets/sprites/resources/meat-single.png');
+		this.load.image('enemy-bear-gray', '/assets/sprites/enemies/bear-gray.png');
 		this.load.image('building-furnace-camp', '/assets/sprites/buildings/furnace-camp.png');
 		this.load.image('building-turret-crossbow', '/assets/sprites/buildings/turret-crossbow.png');
 	}
