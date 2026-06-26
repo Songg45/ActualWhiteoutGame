@@ -32,6 +32,10 @@ interface ActiveEnemy {
 	isDead(): boolean;
 }
 
+const PLAYER_ATTACK_DAMAGE = 18;
+const PLAYER_ATTACK_RANGE = 260;
+const PLAYER_ATTACK_COOLDOWN_MS = 450;
+
 export class GameScene extends Phaser.Scene {
 	private backdrop?: Phaser.GameObjects.Graphics;
 	private builtMap?: BuiltMap;
@@ -328,15 +332,15 @@ export class GameScene extends Phaser.Scene {
 	}
 
 	private tryPlayerAttack(time: number): void {
-		if (!this.player || time - this.lastPlayerAttackAt < 450) {
+		if (!this.player || time - this.lastPlayerAttackAt < PLAYER_ATTACK_COOLDOWN_MS) {
 			return;
 		}
-		const target = findNearestTarget(this.getCombatTargets(), this.player, 125);
+		const target = findNearestTarget(this.getCombatTargets(), this.player, PLAYER_ATTACK_RANGE);
 		if (!target) {
 			return;
 		}
 		this.lastPlayerAttackAt = time;
-		const result = this.applyDamageToEnemy(target.id, 18, 'player');
+		const result = this.applyDamageToEnemy(target.id, PLAYER_ATTACK_DAMAGE, 'player');
 		if (result && result.applied > 0) {
 			this.createFloatingText(target.x, target.y - 82, `-${result.applied}`, '#8f2d2d');
 		}
