@@ -17,6 +17,7 @@ import {
 import { CustomerSalesSystem } from '../systems/CustomerSalesSystem';
 import { DefenseSystem } from '../systems/DefenseSystem';
 import { EconomySystem } from '../systems/EconomySystem';
+import { FurnaceCookingSystem } from '../systems/FurnaceCookingSystem';
 import {
 	advanceEnemyPath,
 	createEnemyPathState,
@@ -53,6 +54,8 @@ export class GameScene extends Phaser.Scene {
 	private economy?: EconomySystem;
 	private progression?: ProgressionSystem;
 	private defenseSystem?: DefenseSystem;
+	private furnaceCooking?: FurnaceCookingSystem;
+	private furnaceStatusLabel?: Phaser.GameObjects.Text;
 	private customerSales?: CustomerSalesSystem;
 	private waveSystem?: WaveSystem;
 	private activeWave?: WaveSpawnPlan;
@@ -94,6 +97,8 @@ export class GameScene extends Phaser.Scene {
 			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 			this.movementInput?.destroy();
 			this.defenseSystem?.destroy();
+			this.furnaceCooking?.destroy();
+			this.furnaceStatusLabel?.destroy();
 			this.customerSales?.queue.clear();
 			this.progression?.destroy();
 			this.economy?.destroy();
@@ -122,6 +127,7 @@ export class GameScene extends Phaser.Scene {
 		this.player?.update(time, delta);
 		this.economy?.update(delta);
 		this.progression?.update(delta);
+		this.updateFurnaceCooking(delta);
 		this.updateCustomers(time, delta);
 		this.updateEnemyWaves(time, delta);
 		this.defenseSystem?.update(time);
@@ -192,6 +198,7 @@ export class GameScene extends Phaser.Scene {
 				applyDamageToEnemy: (enemyId, amount) => this.applyDamageToEnemy(enemyId, amount, 'defense')
 			}
 		);
+		this.createFurnaceCooking(mapRuntime);
 		this.createCustomerSales(mapRuntime);
 		this.firstWaveTimer = this.time.delayedCall(30_000, () => this.startNextWave(this.time.now));
 		this.devWaveKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.B);
@@ -300,6 +307,9 @@ export class GameScene extends Phaser.Scene {
 	}
 
 	private createCustomerSales(mapRuntime: MapRuntime): void {
+		if (!this.furnaceCooking) {
+			throw new Error('Customer sales require a prepared-food inventory.');
+		}
 		const spawn = mapRuntime.requireAnchor('npc-spawn').grid;
 		const service = mapRuntime.getAnchor('exchange')?.grid
 			?? mapRuntime.requireAnchor('food').grid;
@@ -313,13 +323,60 @@ export class GameScene extends Phaser.Scene {
 			x: spawn.x + 0.6,
 			y: spawn.y + 1.2
 		};
-		this.customerSales = new CustomerSalesSystem(gameState, slotGrids, {
+		this.customerSales = new CustomerSalesSystem(gameState, this.furnaceCooking, slotGrids, {
 			capacity: CUSTOMER_QUEUE_CAPACITY,
 			foodPerSale: 1,
 			moneyPerSale: 6
 		});
 		this.nextCustomerSpawnAt = this.time.now + 900;
 		this.nextCustomerServiceAt = this.time.now + 1_800;
+	}
+
+	private createFurnaceCooking(mapRuntime: MapRuntime): void {
+		this.furnaceCooking = new FurnaceCookingSystem(gameState, {
+			capacity: 8,
+			meatPerBatch: 1,
+			foodPerBatch: 1,
+			cookIntervalMs: 2_400,
+			enabled: false
+		});
+		if (!this.builtMap) {
+			return;
+		}
+		const furnace = gridToScreen(mapRuntime.requireAnchor('furnace').grid, this.builtMap.origin);
+		this.furnaceStatusLabel = this.add.text(furnace.x, furnace.y - 92, 'Cooked 0/8', {
+			color: '#17384c',
+			backgroundColor: 'rgba(255,255,255,0.9)',
+			fontFamily: 'Arial, sans-serif',
+			fontSize: '13px',
+			fontStyle: 'bold',
+			padding: { x: 7, y: 4 }
+		})
+			.setOrigin(0.5)
+			.setDepth(DEPTH_LAYERS.ui - 1);
+	}
+
+	private updateFurnaceCooking(deltaMs: number): void {
+		if (!this.furnaceCooking) {
+			return;
+		}
+		const furnaceBuilt = (this.progression?.getCompletedBuildings('furnace').length ?? 0) > 0;
+		this.furnaceCooking.setEnabled(furnaceBuilt);
+		const produced = this.furnaceCooking.update(deltaMs);
+		const snapshot = this.furnaceCooking.snapshot;
+		this.furnaceStatusLabel
+			?.setText(furnaceBuilt
+				? `Cooked ${snapshot.preparedFood}/${snapshot.capacity}`
+				: 'Build furnace')
+			.setVisible(true);
+		if (produced > 0 && this.furnaceStatusLabel) {
+			this.createFloatingText(
+				this.furnaceStatusLabel.x,
+				this.furnaceStatusLabel.y - 16,
+				`Cooked +${produced}`,
+				'#23814d'
+			);
+		}
 	}
 
 	private updateCustomers(time: number, delta: number): void {
@@ -386,7 +443,7 @@ export class GameScene extends Phaser.Scene {
 		}
 		const result = this.customerSales.tryServeNext();
 		if (result.status === 'insufficient-food') {
-			this.createFloatingText(headNpc.x, headNpc.y - 92, 'Needs meat', '#8f2d2d');
+			this.createFloatingText(headNpc.x, headNpc.y - 92, 'Needs cooked food', '#8f2d2d');
 			return;
 		}
 		if (result.status !== 'served' || !result.customer) {
