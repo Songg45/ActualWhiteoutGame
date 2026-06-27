@@ -69,8 +69,17 @@ export class CustomerSalesSystem {
 			};
 		}
 
-		const consumedPreparedFood = this.preparedFood.consumePreparedFood(this.foodPerSale);
-		if (consumedPreparedFood !== this.foodPerSale) {
+		const previousMoney = this.state.snapshot.resources.money;
+		let paidMoney = 0;
+		try {
+			paidMoney = this.state.changeResource('money', this.moneyPerSale);
+		} catch (error) {
+			paidMoney = this.state.snapshot.resources.money - previousMoney;
+			if (paidMoney !== this.moneyPerSale) {
+				throw error;
+			}
+		}
+		if (paidMoney !== this.moneyPerSale) {
 			return {
 				status: 'insufficient-food',
 				customer: next,
@@ -79,8 +88,9 @@ export class CustomerSalesSystem {
 			};
 		}
 
-		const paidMoney = this.state.changeResource('money', this.moneyPerSale);
-		if (paidMoney !== this.moneyPerSale) {
+		const consumedPreparedFood = this.preparedFood.consumePreparedFood(this.foodPerSale);
+		if (consumedPreparedFood !== this.foodPerSale) {
+			this.state.changeResource('money', -paidMoney);
 			return {
 				status: 'insufficient-food',
 				customer: next,

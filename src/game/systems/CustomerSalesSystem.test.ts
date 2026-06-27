@@ -78,6 +78,39 @@ describe('CustomerSalesSystem', () => {
 		}))).toEqual([{ resource: 'money', delta: 6, value: 6 }]);
 	});
 
+	it('does not duplicate payment or lose extra food when a money listener throws', () => {
+		const events = new GameEventBus();
+		const state = new GameState(events);
+		const preparedFood = new TestPreparedFood(2);
+		const system = new CustomerSalesSystem(state, preparedFood, slots, {
+			foodPerSale: 1,
+			moneyPerSale: 6
+		});
+		events.on('resource:changed', (event) => {
+			if (event.resource === 'money') {
+				throw new Error('subscriber failed after money mutation');
+			}
+		});
+		system.enqueueCustomer('customer-a', spawn, service, 0);
+
+		expect(system.tryServeNext()).toEqual({
+			status: 'served',
+			customer: expect.objectContaining({ id: 'customer-a', state: 'served' }),
+			consumedPreparedFood: 1,
+			paidMoney: 6
+		});
+		expect(system.queue.peek()).toBeUndefined();
+		expect(preparedFood.preparedFood).toBe(1);
+		expect(state.snapshot.resources.money).toBe(6);
+		expect(system.tryServeNext()).toEqual({
+			status: 'empty-queue',
+			consumedPreparedFood: 0,
+			paidMoney: 0
+		});
+		expect(preparedFood.preparedFood).toBe(1);
+		expect(state.snapshot.resources.money).toBe(6);
+	});
+
 	it('keeps totals finite and non-negative over repeated attempted sales', () => {
 		const state = new GameState(new GameEventBus());
 		state.changeResource('meat', 1);
