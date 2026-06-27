@@ -4,6 +4,8 @@
 
 Each implementation agent owns one branch and one draft pull request. Agents push after every meaningful, tested milestone. Agent 13 reviews integration readiness and merges accepted work in the order defined by `docs/agent-plan.md`.
 
+As of PR #15, the project has used this workflow successfully through the enemy combat skeleton. When the GitHub account cannot formally approve its own PR, Agent 13 must still record the review decision, blockers, verification, and merge recommendation before the coordinator performs the GitHub ready/merge action.
+
 ## Branches
 
 | Agent | Branch |
@@ -85,6 +87,13 @@ Every PR must state:
 
 Agent 13 reviews diffs and runs the project locally. It may request changes or add a narrowly scoped integration fix. GitHub may not allow formal approval when all work is authored and reviewed by the same GitHub account; in that case, Agent 13 records its review decision in the PR and `docs/integration-log.md` before merging.
 
+If Agent 13 is blocked by usage/tooling after a successful review, the coordinator may complete mechanical GitHub actions only when all of these are true:
+
+- Agent 13 explicitly reported "acceptable" or equivalent with no blockers.
+- The PR head still matches the reviewed commit.
+- The PR is mergeable and clean.
+- The action is limited to marking ready and merging the reviewed PR.
+
 ## Shared Files
 
 Changes to these files require explicit integration notes:
@@ -97,3 +106,12 @@ Changes to these files require explicit integration notes:
 - `src/game/state/GameState.ts`
 - `src/game/events/GameEvents.ts`
 - `docs/contracts.md`
+
+## Current Next-Agent Handoff
+
+Agent 8 should build defensive behavior on top of PR #15's combat hooks:
+
+- Use `GameScene.getCombatTargets()` to discover live enemies.
+- Use `GameScene.applyDamageToEnemy()` to apply turret/trap damage.
+- Preserve the bear reward contract: bear deaths add meat/food, not direct cash-first rewards.
+- Do not start wall damage, NPC sale loops, or furnace fuel rework in the Agent 8 slice.

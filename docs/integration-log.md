@@ -84,9 +84,12 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   clean frozen-lock Docker build/typecheck, and desktop/mobile movement,
   collision, resize, release-stop, and console smoke checks.
 
-## 2026-06-23 - Agent 4 Economy Contract (Pending Review)
+## 2026-06-23 - Agent 4 Economy Contract
 
 - Branch: `codex/resources-economy`
+- PR: #11
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `dc748f5f74a51b35c7cf6c17c28b4b4d39a9c8ff`
 - Added typed `station:changed` and `economy:transfer` events.
 - Added atomic typed multi-resource affordability/spend APIs and bounded
   `ResourceStore.transferTo` for Agent 5 incremental funding.
@@ -97,9 +100,12 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   collect/carry/deposit/exchange/restart QA with no browser console errors.
 - Visual evidence: `docs/evidence/agent-4/`.
 
-## 2026-06-24 - Agent 5 Building Progression Contract (Pending Review)
+## 2026-06-25 - Agent 5 Building Progression Contract
 
 - Branch: `codex/building-progression`
+- PR: #12
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `01aa50af2e922b9450869b389b74d5ce40d7c940`
 - Added data-driven build definitions, build-pad state contracts, inert
   completion records, and a progression query for completed turret/trap
   placements.
@@ -108,4 +114,65 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   `ProgressionSystem.getCompletedDefensePlacements()`.
 - Worker automation should use the `worker-hut` unlock hook until Agent 6 owns
   behavior.
+
+## 2026-06-25 - Tree Collision Pass
+
+- Branch: `codex/tree-collision-pass`
+- PR: #13
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `bf94dbd6da18b265e78bee87b83fa24c6a142511`
+- Made ordinary trees decorative/pass-through so forest density does not block
+  free-walk movement.
+- Preserved rocks, fences, buildings, authored blockers, and bounds as
+  collision authorities.
+- Updated the shared collision contract in `docs/contracts.md`.
+
+## 2026-06-26 - Map Runtime Architecture
+
+- Branch: `codex/map-runtime-architecture`
+- PR: #14
+- Decision: approved by Agent 13 and merged into `main`.
+- Merge commit: `6f2a763176fa2b0db7ee99b6d67a4949c745d6dc`
+- Added `MapRecipe`, `GameplayAnchor`, validation, `MapRecipeBuilder`, and
+  `MapRuntime` so maps are generated from typed gameplay anchors.
+- Converted the current map into `camp-01` while preserving existing gameplay
+  layout and compatibility marker IDs.
+- Playable recipes now require at least one `furnace`, `enemy-spawn`,
+  `npc-spawn`, `food`, and `wood` anchor.
+- Systems should migrate toward runtime anchor queries instead of relying on
+  hardcoded legacy marker IDs.
+
+## 2026-06-27 - Agent 7 Enemy Combat Skeleton
+
+- Branch: `codex/enemies-combat`
+- PR: #15
+- Decision: accepted by Agent 13 and merged into `main`.
+- Merge commit: `6f7453a8b044da2ddfb636de9b695bf27ee3bde7`
+- Added enemy combat types, bear enemy model/entity rendering, wave spawning
+  from map-runtime enemy lanes, enemy lane movement, health bars, and death
+  reward handling.
+- Added player attack on desktop with `Space` and mobile with a lower-right
+  `ATK` touch button. Both call the same scene attack path.
+- Established the current reward contract: bears reward `meat` through
+  `GameState.changeResource('meat', amount)`; bear kills are not a direct
+  cash-first economy source.
+- Added defense integration hooks for Agent 8:
+  `GameScene.getCombatTargets()` and `GameScene.applyDamageToEnemy()`.
+- Agent 13 initially blocked merge until bear rewards were meat-first and the
+  mobile attack affordance existed. Both blockers were corrected before merge.
+- Verification passed in Docker: focused combat/reward/mobile attack tests,
+  full `pnpm test`, asset validation, and `docker compose --profile tools build
+  verify`.
+- GitHub self-approval was not available for the authoring account, so Agent
+  13 recorded an acceptable review decision and the coordinator performed the
+  mechanical ready/merge action after confirming the reviewed head.
+
+## Next Planned Slice
+
+- Agent 8 should implement defensive buildings/turrets/traps against the
+  merged enemy combat skeleton.
+- Agent 8 should use `getCombatTargets()` and `applyDamageToEnemy()` rather
+  than reaching into enemy internals.
+- Defer bear wall damage, wood-as-furnace-fuel, wood-for-wall-repair, furnace
+  cooking, and NPC food sales to later architecture/economy passes.
 

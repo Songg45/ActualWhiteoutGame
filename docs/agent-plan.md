@@ -11,6 +11,23 @@ Recommended stack:
 - Phaser
 - GitHub branch-per-agent workflow
 
+## Current Status
+
+Merged through PR #15:
+
+- Agent 1 foundation, Agent 10 placeholder art, Agent 2 map, Agent 3 movement, free-movement controls, Agent 4 economy, Agent 5 build pads/progression, tree collision pass, map runtime architecture, and Agent 7 enemy combat skeleton are on `main`.
+- The current map is authored as `camp-01` through `MapRecipe` / `MapRuntime`.
+- Ordinary trees are non-blocking scenery. Rocks, fences, bounds, build pads, and authored blockers remain blocking.
+- Player movement is continuous free-walk with keyboard and mobile joystick input.
+- Enemy combat currently supports bear waves, enemy health bars, player attack by `Space`, mobile `ATK` button, meat-first death rewards, and stable hooks for future defenses.
+- The intended economy direction is:
+  - bear drops food/meat
+  - furnace cooks food
+  - cooked food is sold to NPCs for money
+  - later: forest wood powers the furnace and repairs bear-damaged walls
+
+Next recommended implementation slice: Agent 8 defensive buildings/turrets using the existing combat hooks.
+
 ## Agent 1: Project Foundation / Game Architecture
 
 Mission: Set up the browser game project and core Phaser structure.
@@ -300,7 +317,7 @@ Acceptance criteria:
 
 ## Agent 7: Enemies / Combat / Waves
 
-Mission: Implement bears/enemies and defensive combat.
+Mission: Implement bears/enemies and the combat wave skeleton.
 
 Responsibilities:
 
@@ -315,24 +332,26 @@ Responsibilities:
   - spawn count
   - enemy health scaling
 - Implement enemy behavior:
-  - move toward gate/fence/building
-  - attack defenses
-  - enter camp if breach happens
+  - spawn from map-runtime enemy anchors/spawn lanes
+  - move along the authored lane
+  - reserve gate/fence/building attacks for a later wall-defense pass
 - Implement health bars.
 - Implement death rewards:
-  - meat drops
-  - money drops
+  - bears must reward meat/food as the primary resource
+  - bear kills must not become the direct main money source
 - Add basic combat interactions:
   - player can damage nearby enemy
-  - turret can shoot enemy
-  - trap can damage enemies in radius
+  - keyboard `Space` attack
+  - mobile/touch `ATK` attack button
+  - expose target and damage hooks for Agent 8 defenses
 
 Deliverables:
 
 - Enemy waves spawn.
-- Enemies move and attack.
+- Enemies move along spawn lanes.
 - Enemies can be killed.
-- Drops appear after death.
+- Bear deaths feed the meat/food economy path.
+- Combat hooks are available for future turrets/traps.
 
 Suggested files:
 
@@ -340,14 +359,17 @@ Suggested files:
 - `src/game/combat/CombatTypes.ts`
 - `src/game/systems/WaveSystem.ts`
 - `src/game/systems/CombatSystem.ts`
-- `src/game/objects/HealthBar.ts`
+- `src/game/systems/EnemyMovementSystem.ts`
+- `src/game/systems/EnemyRewardSystem.ts`
+- `src/game/systems/MobileAttackButton.ts`
 
 Acceptance criteria:
 
 - Waves create pressure but are survivable.
-- Turrets target enemies automatically.
+- Player can attack on desktop and mobile.
 - Enemy health bars update correctly.
 - Enemy deaths produce usable resources.
+- `getCombatTargets()` and `applyDamageToEnemy()` remain stable for Agent 8.
 
 ## Agent 8: Defensive Buildings / Turrets / Traps
 
@@ -356,6 +378,9 @@ Mission: Implement auto-defense structures like crossbow towers and spinning axe
 Responsibilities:
 
 - Add turret building behavior:
+  - query completed defense placements from progression
+  - query enemies through `GameScene.getCombatTargets()`
+  - apply damage through `GameScene.applyDamageToEnemy()`
   - scan radius
   - target nearest enemy
   - fire projectile
@@ -393,6 +418,7 @@ Acceptance criteria:
 - Turrets automatically shoot enemies.
 - Traps damage enemies in range.
 - Defensive buildings can be built through build pads.
+- Bear meat rewards remain unchanged.
 - Effects do not tank performance.
 
 ## Agent 9: UI / Mobile Controls / HUD
@@ -625,4 +651,3 @@ Review checklist:
 13. Agent 13 reviews and merges branches.
 
 The minimum playable slice is Agents 1-5 plus 7-9. Agents 6, 10, 11, and 12 turn it from working prototype into something people might actually keep playing.
-

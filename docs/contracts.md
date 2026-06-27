@@ -117,3 +117,26 @@ unlocks, not completed construction.
 Worker automation should gate on `ProgressionSystem.isWorkerHutUnlocked()` or
 the `worker-hut` building unlock until Agent 6 adds worker behavior.
 
+## Combat And Rewards
+
+Enemy waves are currently driven by `WaveSystem` using map-runtime enemy spawn
+lanes. Bears are the first enemy type and must preserve the food-first economy
+contract: bear deaths add `meat` through `GameState.changeResource('meat',
+amount)`. Bear kills should not become the primary direct-money source.
+
+The intended downstream loop is:
+
+- bear drops food/meat
+- furnace cooks food
+- cooked food is sold to NPCs for money
+
+Future defense systems should integrate through the scene-level combat hooks
+instead of reaching into enemy internals:
+
+- `GameScene.getCombatTargets()`
+- `GameScene.applyDamageToEnemy()`
+
+Desktop player attack uses `Space`; mobile/touch player attack uses the
+lower-right `ATK` affordance. Both should invoke the same attack path so combat
+rules stay consistent across input modes.
+
