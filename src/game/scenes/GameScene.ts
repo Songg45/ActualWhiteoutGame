@@ -13,6 +13,7 @@ import {
 	findNearestTarget,
 	type DamageResult
 } from '../systems/CombatSystem';
+import { DefenseSystem } from '../systems/DefenseSystem';
 import { EconomySystem } from '../systems/EconomySystem';
 import {
 	advanceEnemyPath,
@@ -46,6 +47,7 @@ export class GameScene extends Phaser.Scene {
 	private movementInput?: MovementInputController;
 	private economy?: EconomySystem;
 	private progression?: ProgressionSystem;
+	private defenseSystem?: DefenseSystem;
 	private waveSystem?: WaveSystem;
 	private activeWave?: WaveSpawnPlan;
 	private activeWaveStartedAt = 0;
@@ -78,6 +80,7 @@ export class GameScene extends Phaser.Scene {
 		this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
 			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 			this.movementInput?.destroy();
+			this.defenseSystem?.destroy();
 			this.progression?.destroy();
 			this.economy?.destroy();
 			this.firstWaveTimer?.remove(false);
@@ -102,6 +105,7 @@ export class GameScene extends Phaser.Scene {
 		this.economy?.update(delta);
 		this.progression?.update(delta);
 		this.updateEnemyWaves(time, delta);
+		this.defenseSystem?.update(time);
 		this.layoutInteractionPrompt();
 	}
 
@@ -160,6 +164,15 @@ export class GameScene extends Phaser.Scene {
 			}
 		);
 		this.waveSystem = new WaveSystem(mapRuntime);
+		this.defenseSystem = new DefenseSystem(
+			this,
+			this.progression,
+			this.builtMap.origin,
+			{
+				getCombatTargets: () => this.getCombatTargets(),
+				applyDamageToEnemy: (enemyId, amount) => this.applyDamageToEnemy(enemyId, amount, 'defense')
+			}
+		);
 		this.firstWaveTimer = this.time.delayedCall(30_000, () => this.startNextWave(this.time.now));
 		this.devWaveKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.B);
 		this.devWaveKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
