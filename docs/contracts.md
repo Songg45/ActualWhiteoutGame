@@ -109,10 +109,10 @@ Build pads are data-driven through `BUILDING_DEFINITIONS` in
 pad state is one of `locked`, `available`, `partially-funded`, `constructing`,
 or `complete`.
 
-`ProgressionSystem.getCompletedDefensePlacements()` returns completed inert
-turret and trap placements for future combat/defense systems. Use this for
-placement queries; `GameState.snapshot.unlockedBuildings` indicates availability
-unlocks, not completed construction.
+`ProgressionSystem.getCompletedDefensePlacements()` returns completed turret
+and trap placements for `DefenseSystem`. Use this for placement queries;
+`GameState.snapshot.unlockedBuildings` indicates availability unlocks, not
+completed construction.
 
 Worker automation should gate on `ProgressionSystem.isWorkerHutUnlocked()` or
 the `worker-hut` building unlock until Agent 6 adds worker behavior.
@@ -130,13 +130,31 @@ The intended downstream loop is:
 - furnace cooks food
 - cooked food is sold to NPCs for money
 
-Future defense systems should integrate through the scene-level combat hooks
-instead of reaching into enemy internals:
+`DefenseSystem` integrates through the scene-level combat hooks instead of
+reaching into enemy internals:
 
 - `GameScene.getCombatTargets()`
 - `GameScene.applyDamageToEnemy()`
 
+Turret and trap damage must stay range/cooldown gated. Future combat systems
+should preserve these hooks rather than duplicating enemy lookup or damage
+logic.
+
 Desktop player attack uses `Space`; mobile/touch player attack uses the
 lower-right `ATK` affordance. Both should invoke the same attack path so combat
 rules stay consistent across input modes.
+
+## NPC Sales Direction
+
+The next economy slice should make money come from customer sales, not direct
+bear kills. The intended first NPC loop is:
+
+- bears and combat provide `meat`
+- furnace/cooking behavior prepares food when implemented
+- NPC customers queue for food
+- successful service adds `money`
+
+Worker automation, wall repair, wood fuel, and bear wall damage are separate
+future contracts and should not be mixed into the first NPC sales pass unless
+explicitly requested.
 

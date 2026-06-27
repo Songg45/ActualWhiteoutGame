@@ -167,12 +167,36 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   13 recorded an acceptable review decision and the coordinator performed the
   mechanical ready/merge action after confirming the reviewed head.
 
+## 2026-06-27 - Agent 8 Defensive Turrets And Traps
+
+- Branch: `codex/defenses`
+- PR: #16
+- Decision: accepted by Agent 13 and merged into `main`.
+- Merge commit: `f106904db1f39b944d4e3ddcb1b7b60db96b1a04`
+- Added `DefenseSystem` for completed turret and trap placements returned by
+  `ProgressionSystem.getCompletedDefensePlacements()`.
+- Turrets target bears through `GameScene.getCombatTargets()` and apply damage
+  through `GameScene.applyDamageToEnemy()`.
+- Traps apply scoped area damage with cooldown gating.
+- Added lightweight bolt, impact, and trap pulse feedback using Phaser
+  primitives.
+- Preserved player `Space` and mobile `ATK` attacks, bear meat rewards, and the
+  Agent 7 public combat hooks.
+- Agent 13 accepted the PR on first review. GitHub self-approval was not
+  available for the authoring account, so the coordinator performed the
+  mechanical merge after confirming the reviewed head.
+- Verification passed in Docker: focused `DefenseSystem` tests, full
+  `pnpm test`, asset validation, and `docker compose --profile tools build
+  verify`. Browser smoke passed at `1280x720` and `320x480`; mobile `ATK`
+  remained visible.
+
 ## Next Planned Slice
 
-- Agent 8 should implement defensive buildings/turrets/traps against the
-  merged enemy combat skeleton.
-- Agent 8 should use `getCombatTargets()` and `applyDamageToEnemy()` rather
-  than reaching into enemy internals.
-- Defer bear wall damage, wood-as-furnace-fuel, wood-for-wall-repair, furnace
-  cooking, and NPC food sales to later architecture/economy passes.
+- Agent 6 should implement a small NPC customer queue and food-sales loop so
+  money comes from served customers instead of direct bear rewards.
+- Keep the first NPC pass narrow: customer spawn/queue/service/payment, with
+  worker automation optional or deferred.
+- Preserve bear meat rewards and Agent 8 defense behavior.
+- Defer bear wall damage, wood-as-furnace-fuel, wood-for-wall-repair, and full
+  furnace cooking architecture to later economy/defense passes.
 
