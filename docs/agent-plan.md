@@ -13,21 +13,22 @@ Recommended stack:
 
 ## Current Status
 
-Merged through PR #16:
+Merged through PR #17:
 
-- Agent 1 foundation, Agent 10 placeholder art, Agent 2 map, Agent 3 movement, free-movement controls, Agent 4 economy, Agent 5 build pads/progression, tree collision pass, map runtime architecture, Agent 7 enemy combat skeleton, and Agent 8 defensive turrets/traps are on `main`.
+- Agent 1 foundation, Agent 10 placeholder art, Agent 2 map, Agent 3 movement, free-movement controls, Agent 4 economy, Agent 5 build pads/progression, tree collision pass, map runtime architecture, Agent 7 enemy combat skeleton, Agent 8 defensive turrets/traps, and Agent 6 NPC customer sales are on `main`.
 - The current map is authored as `camp-01` through `MapRecipe` / `MapRuntime`.
 - Ordinary trees are non-blocking scenery. Rocks, fences, bounds, build pads, and authored blockers remain blocking.
 - Player movement is continuous free-walk with keyboard and mobile joystick input.
 - Enemy combat currently supports bear waves, enemy health bars, player attack by `Space`, mobile `ATK` button, meat-first death rewards, and stable hooks for future defenses.
 - Completed turret and trap placements now automatically damage bears through the public combat hooks.
+- Customer NPCs now queue near the exchange/food area, consume bounded `meat`, and pay `money`.
 - The intended economy direction is:
   - bear drops food/meat
   - furnace cooks food
   - cooked food is sold to NPCs for money
   - later: forest wood powers the furnace and repairs bear-damaged walls
 
-Next recommended implementation slice: Agent 6 NPC queue/sales, scoped to a simple cooked-food-to-money loop.
+Next recommended implementation slice: furnace cooking, scoped to converting bear meat into a prepared food output that NPCs buy.
 
 ## Agent 1: Project Foundation / Game Architecture
 
@@ -275,7 +276,7 @@ Acceptance criteria:
 
 ## Agent 6: Workers / NPC Queue System
 
-Mission: Add customer NPCs that queue and buy food, plus reserve worker hooks for later automation.
+Mission: Add customer NPCs that queue and buy food, plus reserve worker hooks for later automation. Agent 6 is merged as PR #17.
 
 Responsibilities:
 
@@ -317,6 +318,7 @@ Acceptance criteria:
 - Player can serve NPCs.
 - Money generation works through NPC food sales.
 - Bear meat rewards and defensive targeting remain unchanged.
+- Current implementation sells raw `meat` as a temporary food input until the furnace cooking pass introduces prepared food.
 
 ## Agent 7: Enemies / Combat / Waves
 

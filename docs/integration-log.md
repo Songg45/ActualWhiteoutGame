@@ -190,25 +190,32 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   verify`. Browser smoke passed at `1280x720` and `320x480`; mobile `ATK`
   remained visible.
 
-## Next Planned Slice
-
-- Agent 6 should implement a small NPC customer queue and food-sales loop so
-  money comes from served customers instead of direct bear rewards.
-- Keep the first NPC pass narrow: customer spawn/queue/service/payment, with
-  worker automation optional or deferred.
-- Preserve bear meat rewards and Agent 8 defense behavior.
-- Defer bear wall damage, wood-as-furnace-fuel, wood-for-wall-repair, and full
-  furnace cooking architecture to later economy/defense passes.
-
-## 2026-06-27 - Agent 6 NPC Sales Checkpoint
+## 2026-06-27 - Agent 6 NPC Sales
 
 - Branch: `codex/npc-workers`
+- PR: #17
+- Decision: accepted by Agent 13 and merged into `main`.
+- Merge commit: `94aead2795a500e5538e4c2a09fe8bb580de5a2a`
 - Added a narrow customer queue and sales loop. Customers consume `GameState`
   `meat` as the temporary service food resource and pay `money` through
   `GameState`; this is intentionally compatible with a future furnace/cooked
   food architecture replacing the input resource.
 - Customer NPCs are non-blocking scene containers and are not exposed through
   `GameScene.getCombatTargets()`, preserving defense targeting.
+- Insufficient meat leaves the queue and resources unchanged.
+- Agent 13 accepted the PR and merged it after GitHub self-approval was
+  rejected.
+- Verification passed in Docker: full `pnpm test`, asset validation, and
+  `docker compose --profile tools build verify`. Browser smoke passed at
+  `1280x720` and `320x480`.
 - Worker automation, wall damage/repair, wood fuel, and full cooking remain
   deferred.
 
+## Next Planned Slice
+
+- Add a narrow furnace cooking pass so NPC customers buy prepared/cooked food
+  instead of raw bear meat.
+- Preserve bear meat rewards, Agent 8 defenses, Agent 6 queue behavior, and
+  player desktop/mobile controls.
+- Defer wood-as-furnace-fuel, wood-for-wall-repair, bear wall damage, worker
+  automation, procedural maps, and broad resource-type redesign.
