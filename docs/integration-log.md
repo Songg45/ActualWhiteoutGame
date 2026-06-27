@@ -200,3 +200,15 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
 - Defer bear wall damage, wood-as-furnace-fuel, wood-for-wall-repair, and full
   furnace cooking architecture to later economy/defense passes.
 
+## 2026-06-27 - Agent 6 NPC Sales Checkpoint
+
+- Branch: `codex/npc-workers`
+- Added a narrow customer queue and sales loop. Customers consume `GameState`
+  `meat` as the temporary service food resource and pay `money` through
+  `GameState`; this is intentionally compatible with a future furnace/cooked
+  food architecture replacing the input resource.
+- Customer NPCs are non-blocking scene containers and are not exposed through
+  `GameScene.getCombatTargets()`, preserving defense targeting.
+- Worker automation, wall damage/repair, wood fuel, and full cooking remain
+  deferred.
+

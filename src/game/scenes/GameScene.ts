@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
 import { DEPTH_LAYERS, GAME_COLORS, SCENE_KEYS, WORLD_BOUNDS } from '../config';
 import { Enemy } from '../entities/Enemy';
+import { NPC } from '../entities/NPC';
 import { Player } from '../entities/Player';
 import { MapBuilder, type BuiltMap } from '../map/MapBuilder';
-import type { GridPoint } from '../map/IsoMath';
+import { gridToScreen, type GridPoint } from '../map/IsoMath';
 import { MapRuntime } from '../map/MapRuntime';
 import { camp01Recipe } from '../map/recipes/camp01';
 import { gameState } from '../state/GameState';
@@ -13,6 +14,7 @@ import {
 	findNearestTarget,
 	type DamageResult
 } from '../systems/CombatSystem';
+import { CustomerSalesSystem } from '../systems/CustomerSalesSystem';
 import { DefenseSystem } from '../systems/DefenseSystem';
 import { EconomySystem } from '../systems/EconomySystem';
 import {
@@ -38,6 +40,9 @@ interface ActiveEnemy {
 const PLAYER_ATTACK_DAMAGE = 18;
 const PLAYER_ATTACK_RANGE = 260;
 const PLAYER_ATTACK_COOLDOWN_MS = 450;
+const CUSTOMER_SPAWN_INTERVAL_MS = 5_500;
+const CUSTOMER_SERVICE_INTERVAL_MS = 1_250;
+const CUSTOMER_QUEUE_CAPACITY = 4;
 
 export class GameScene extends Phaser.Scene {
 	private backdrop?: Phaser.GameObjects.Graphics;
@@ -48,6 +53,7 @@ export class GameScene extends Phaser.Scene {
 	private economy?: EconomySystem;
 	private progression?: ProgressionSystem;
 	private defenseSystem?: DefenseSystem;
+	private customerSales?: CustomerSalesSystem;
 	private waveSystem?: WaveSystem;
 	private activeWave?: WaveSpawnPlan;
 	private activeWaveStartedAt = 0;
@@ -60,6 +66,13 @@ export class GameScene extends Phaser.Scene {
 	private attackButtonLabel?: Phaser.GameObjects.Text;
 	private attackButtonHitArea?: Phaser.GameObjects.Zone;
 	private lastPlayerAttackAt = Number.NEGATIVE_INFINITY;
+	private customerSpawnGrid?: GridPoint;
+	private customerServiceGrid?: GridPoint;
+	private customerExitGrid?: GridPoint;
+	private nextCustomerId = 1;
+	private nextCustomerSpawnAt = 0;
+	private nextCustomerServiceAt = 0;
+	private readonly customerNpcs = new Map<string, NPC>();
 
 	constructor() {
 		super(SCENE_KEYS.game);
@@ -81,6 +94,7 @@ export class GameScene extends Phaser.Scene {
 			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutWorld, this);
 			this.movementInput?.destroy();
 			this.defenseSystem?.destroy();
+			this.customerSales?.queue.clear();
 			this.progression?.destroy();
 			this.economy?.destroy();
 			this.firstWaveTimer?.remove(false);
@@ -93,6 +107,10 @@ export class GameScene extends Phaser.Scene {
 				active.enemy.destroy();
 			}
 			this.activeEnemies = [];
+			for (const npc of this.customerNpcs.values()) {
+				npc.destroy();
+			}
+			this.customerNpcs.clear();
 			this.player?.destroy();
 			this.builtMap?.destroy();
 			this.backdrop?.destroy();
@@ -104,6 +122,7 @@ export class GameScene extends Phaser.Scene {
 		this.player?.update(time, delta);
 		this.economy?.update(delta);
 		this.progression?.update(delta);
+		this.updateCustomers(time, delta);
 		this.updateEnemyWaves(time, delta);
 		this.defenseSystem?.update(time);
 		this.layoutInteractionPrompt();
@@ -173,6 +192,7 @@ export class GameScene extends Phaser.Scene {
 				applyDamageToEnemy: (enemyId, amount) => this.applyDamageToEnemy(enemyId, amount, 'defense')
 			}
 		);
+		this.createCustomerSales(mapRuntime);
 		this.firstWaveTimer = this.time.delayedCall(30_000, () => this.startNextWave(this.time.now));
 		this.devWaveKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.B);
 		this.devWaveKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
@@ -277,6 +297,127 @@ export class GameScene extends Phaser.Scene {
 			this.tryPlayerAttack(this.time.now);
 		});
 		this.layoutMobileAttackButton();
+	}
+
+	private createCustomerSales(mapRuntime: MapRuntime): void {
+		const spawn = mapRuntime.requireAnchor('npc-spawn').grid;
+		const service = mapRuntime.getAnchor('exchange')?.grid
+			?? mapRuntime.requireAnchor('food').grid;
+		const slotGrids = Array.from({ length: CUSTOMER_QUEUE_CAPACITY }, (_, index) => ({
+			x: service.x - 0.85 - index * 0.68,
+			y: service.y + 0.6 + index * 0.38
+		}));
+		this.customerSpawnGrid = spawn;
+		this.customerServiceGrid = service;
+		this.customerExitGrid = {
+			x: spawn.x + 0.6,
+			y: spawn.y + 1.2
+		};
+		this.customerSales = new CustomerSalesSystem(gameState, slotGrids, {
+			capacity: CUSTOMER_QUEUE_CAPACITY,
+			foodPerSale: 1,
+			moneyPerSale: 6
+		});
+		this.nextCustomerSpawnAt = this.time.now + 900;
+		this.nextCustomerServiceAt = this.time.now + 1_800;
+	}
+
+	private updateCustomers(time: number, delta: number): void {
+		for (const npc of this.customerNpcs.values()) {
+			npc.update(time, delta);
+			if (npc.npcState === 'leaving' && this.customerExitGrid && this.builtMap) {
+				const exit = gridToScreen(this.customerExitGrid, this.builtMap.origin);
+				if (Phaser.Math.Distance.Between(npc.x, npc.y, exit.x, exit.y) < 4) {
+					this.customerNpcs.delete(npc.id);
+					npc.destroy();
+				}
+			}
+		}
+		this.spawnCustomerIfDue(time);
+		this.serveCustomerIfDue(time);
+	}
+
+	private spawnCustomerIfDue(time: number): void {
+		if (
+			!this.customerSales
+			|| !this.customerSpawnGrid
+			|| !this.customerServiceGrid
+			|| !this.builtMap
+			|| time < this.nextCustomerSpawnAt
+			|| this.customerSales.queue.isFull
+		) {
+			return;
+		}
+		const id = `customer-${this.nextCustomerId}`;
+		const queued = this.customerSales.enqueueCustomer(
+			id,
+			this.customerSpawnGrid,
+			this.customerServiceGrid,
+			time
+		);
+		this.nextCustomerSpawnAt = time + CUSTOMER_SPAWN_INTERVAL_MS;
+		if (!queued) {
+			return;
+		}
+		this.nextCustomerId += 1;
+		const spawn = gridToScreen(queued.spawnGrid, this.builtMap.origin);
+		const slot = gridToScreen(queued.slotGrid, this.builtMap.origin);
+		const npc = new NPC(this, {
+			id: queued.id,
+			spawn,
+			speed: 78
+		});
+		npc.setTarget(slot, 'walking');
+		this.customerNpcs.set(queued.id, npc);
+	}
+
+	private serveCustomerIfDue(time: number): void {
+		if (!this.customerSales || !this.builtMap || time < this.nextCustomerServiceAt) {
+			return;
+		}
+		this.nextCustomerServiceAt = time + CUSTOMER_SERVICE_INTERVAL_MS;
+		const head = this.customerSales.queue.peek();
+		if (!head) {
+			return;
+		}
+		const headNpc = this.customerNpcs.get(head.id);
+		if (headNpc?.npcState !== 'waiting') {
+			return;
+		}
+		const result = this.customerSales.tryServeNext();
+		if (result.status === 'insufficient-food') {
+			this.createFloatingText(headNpc.x, headNpc.y - 92, 'Needs meat', '#8f2d2d');
+			return;
+		}
+		if (result.status !== 'served' || !result.customer) {
+			return;
+		}
+		const servedNpc = this.customerNpcs.get(result.customer.id);
+		if (servedNpc) {
+			this.createFloatingText(
+				servedNpc.x,
+				servedNpc.y - 96,
+				`Served +$${result.paidMoney}`,
+				'#23814d'
+			);
+			const exit = gridToScreen(this.customerExitGrid ?? result.customer.spawnGrid, this.builtMap.origin);
+			servedNpc.setNpcState('served');
+			servedNpc.setTarget(exit, 'leaving');
+		}
+		this.syncCustomerQueueTargets();
+	}
+
+	private syncCustomerQueueTargets(): void {
+		if (!this.customerSales || !this.builtMap) {
+			return;
+		}
+		for (const customer of this.customerSales.queue.snapshot.customers) {
+			const npc = this.customerNpcs.get(customer.id);
+			if (!npc || npc.npcState === 'leaving') {
+				continue;
+			}
+			npc.setTarget(gridToScreen(customer.slotGrid, this.builtMap.origin), 'walking');
+		}
 	}
 
 	private layoutMobileAttackButton(): void {

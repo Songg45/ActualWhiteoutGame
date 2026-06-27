@@ -23,3 +23,10 @@
 - Verify turret damage has a cooldown by confirming a bear is not damaged every frame while inside range.
 - Complete the trap pad; lure bears near it and verify the trap pulse damages bears in its area without changing player movement or attack input.
 - Kill a bear with defense damage and verify the reward is still meat/food, not direct money.
+
+## NPC Sales Smoke
+
+- Wait for blue customer NPCs to spawn from the camp NPC anchor and queue near the exchange/food area without blocking player movement.
+- With `meat` available in `GameState`, verify the head customer is served, one meat is consumed, money increases, and the customer walks away.
+- With no meat available, verify the head customer remains queued and resources do not become negative or non-finite.
+- Confirm bear deaths still grant meat and defenses still damage bears through the existing turret/trap cooldown behavior.
