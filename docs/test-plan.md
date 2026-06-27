@@ -14,5 +14,5 @@
 - Buildings can complete.
 - Enemies can spawn.
 - Defenses can damage enemies.
+- At 320x480, the lower-right attack button damages an in-range enemy without blocking the lower-left movement joystick.
 - The player can survive or fail a wave.
-
