@@ -629,11 +629,27 @@ export class GameScene extends Phaser.Scene {
 
 	private showEnemyReward(enemy: Enemy, reward: AppliedDeathReward): void {
 		const label = reward.resource === 'meat'
-			? `Fresh meat +${reward.applied}`
+			? `Food +${reward.applied}`
 			: reward.resource === 'money'
 				? `+$${reward.applied}`
 				: `+${reward.applied} ${reward.resource}`;
 		this.createFloatingText(enemy.x, enemy.y - 112, label, '#23814d');
+		if (reward.resource === 'meat' && this.textures.exists('resource-meat')) {
+			const foodIcon = this.add.image(enemy.x + 18, enemy.y - 58, 'resource-meat')
+				.setDisplaySize(34, 34)
+				.setDepth(DEPTH_LAYERS.effects);
+			this.tweens.add({
+				targets: foodIcon,
+				x: foodIcon.x + 18,
+				y: foodIcon.y - 38,
+				alpha: 0,
+				scaleX: 1.25,
+				scaleY: 1.25,
+				duration: 900,
+				ease: 'Cubic.easeOut',
+				onComplete: () => foodIcon.destroy()
+			});
+		}
 	}
 
 	private createFloatingText(x: number, y: number, text: string, color: string): void {

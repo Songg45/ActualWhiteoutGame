@@ -61,7 +61,7 @@ describe('building definitions', () => {
 describe('BuildPadModel', () => {
 	it('moves deterministically through funding and construction states', () => {
 		const model = pad('furnace');
-		const carry = new TestCarry({ wood: 8, meat: 2, money: 6 });
+		const carry = new TestCarry({ wood: 8, meat: 2 });
 
 		expect(model.snapshot.state).toBe('available');
 		expect(model.fundFromCarry(carry, 3).accepted).toEqual({ wood: 3, meat: 0, money: 0 });
@@ -111,8 +111,8 @@ describe('BuildPadModel', () => {
 		const result = model.fundFromStorage((cost) => spendResources(state, cost));
 
 		expect(result.spend?.ok).toBe(true);
-		expect(result.accepted).toEqual({ wood: 3, meat: 2, money: 6 });
-		expect(state.snapshot.resources).toEqual({ wood: 17, meat: 8, money: 14 });
+		expect(result.accepted).toEqual({ wood: 3, meat: 2, money: 0 });
+		expect(state.snapshot.resources).toEqual({ wood: 17, meat: 8, money: 20 });
 		expect(model.snapshot.state).toBe('constructing');
 	});
 
