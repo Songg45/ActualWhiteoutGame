@@ -229,3 +229,18 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
   food is intentionally local furnace inventory, not a new global resource.
 - Deferred wood fuel, worker automation, wall damage/repair, procedural maps,
   and broad resource architecture changes.
+
+## 2026-06-28 - Playtest Map Layout Checkpoint
+
+- Branch: `codex/playtest-map-layout`
+- Based on latest `origin/codex/furnace-cooking` for the PR #18 follow-up map
+  corrections.
+- Expanded `camp-01` from 14x14 to 15x15 with a 9x9 camp region, shifted gates
+  and enemy east lane to match the larger fence, and kept desktop/320x480
+  framing readable in browser smoke.
+- Moved the wood station to the west tree line and removed the visible
+  `meat-station` resource marker; the required `food` anchor remains metadata
+  for furnace/customer service flow.
+- Replaced the `camp-01` trap pad with a second turret pad. Runtime-created
+  pads now keep unique map anchor pad IDs while sharing the turret building
+  definition, so completed tower placements stay distinct for `DefenseSystem`.

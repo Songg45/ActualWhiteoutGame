@@ -24,15 +24,17 @@ const treePoints: readonly GridPoint[] = [
 	{ x: 3, y: 0 }, { x: 4, y: 1 }, { x: 5, y: 0 }, { x: 8, y: 0 },
 	{ x: 10, y: 1 }, { x: 12, y: 0 }, { x: 13, y: 2 },
 	{ x: 12, y: 4 }, { x: 13, y: 8 }, { x: 12, y: 10 },
-	{ x: 13, y: 12 }, { x: 10, y: 13 }, { x: 7, y: 12 },
-	{ x: 5, y: 13 }, { x: 3, y: 12 }, { x: 1, y: 13 }
+	{ x: 14, y: 5 }, { x: 13, y: 12 }, { x: 14, y: 14 },
+	{ x: 11, y: 13 }, { x: 10, y: 14 }, { x: 7, y: 13 },
+	{ x: 5, y: 14 }, { x: 3, y: 12 }, { x: 1, y: 13 },
+	{ x: 2, y: 8 }, { x: 2, y: 9 }
 ];
 
 const rockPoints: readonly GridPoint[] = [
 	{ x: 2, y: 3 },
 	{ x: 11, y: 2 },
-	{ x: 12, y: 7 },
-	{ x: 4, y: 12 }
+	{ x: 13, y: 7 },
+	{ x: 4, y: 13 }
 ];
 
 const gates: readonly SceneryPlacement[] = [
@@ -45,13 +47,13 @@ const gates: readonly SceneryPlacement[] = [
 	{
 		id: 'gate-east',
 		kind: 'gate',
-		grid: { x: 10, y: 6.5 },
+		grid: { x: 11, y: 6.5 },
 		orientation: 'y'
 	},
 	{
 		id: 'gate-south',
 		kind: 'gate',
-		grid: { x: 7, y: 10 },
+		grid: { x: 7, y: 11 },
 		orientation: 'x'
 	}
 ];
@@ -59,7 +61,7 @@ const gates: readonly SceneryPlacement[] = [
 export const camp01Recipe: MapRecipe = {
 	id: 'camp-01',
 	name: 'Snowy Starter Camp',
-	size: { width: 14, height: 14 },
+	size: { width: 15, height: 15 },
 	terrain: {
 		defaultKind: 'snow',
 		regions: [
@@ -67,8 +69,8 @@ export const camp01Recipe: MapRecipe = {
 				kind: 'camp',
 				x: 3,
 				y: 3,
-				width: 8,
-				height: 8
+				width: 9,
+				height: 9
 			}
 		]
 	},
@@ -83,22 +85,22 @@ export const camp01Recipe: MapRecipe = {
 	blockers: [
 		...fenceLine(
 			'fence-north',
-			[3, 4, 5, 8, 9, 10].map((x) => ({ x, y: 3 })),
+			[3, 4, 5, 8, 9, 10, 11].map((x) => ({ x, y: 3 })),
 			'x'
 		),
 		...fenceLine(
 			'fence-south',
-			[3, 4, 5, 6, 8, 9, 10].map((x) => ({ x, y: 10 })),
+			[3, 4, 5, 6, 8, 9, 10, 11].map((x) => ({ x, y: 11 })),
 			'x'
 		),
 		...fenceLine(
 			'fence-west',
-			[4, 5, 6, 7, 8, 9].map((y) => ({ x: 3, y })),
+			[4, 5, 6, 7, 8, 9, 10].map((y) => ({ x: 3, y })),
 			'y'
 		),
 		...fenceLine(
 			'fence-east',
-			[4, 5, 8, 9].map((y) => ({ x: 10, y })),
+			[4, 5, 8, 9, 10].map((y) => ({ x: 11, y })),
 			'y'
 		),
 		...rockPoints.map((grid, index): BlockerPlacement => ({
@@ -121,7 +123,7 @@ export const camp01Recipe: MapRecipe = {
 		{
 			id: 'wood',
 			kind: 'wood',
-			grid: { x: 4.5, y: 7.5 },
+			grid: { x: 2.2, y: 8.6 },
 			label: 'Wood',
 			legacyMarkerId: 'wood-station',
 			markerKind: 'resource-station',
@@ -131,10 +133,7 @@ export const camp01Recipe: MapRecipe = {
 			id: 'food',
 			kind: 'food',
 			grid: { x: 8.5, y: 4.5 },
-			label: 'Meat',
-			legacyMarkerId: 'meat-station',
-			markerKind: 'resource-station',
-			resource: 'meat'
+			label: 'Food Service'
 		},
 		{
 			id: 'storage',
@@ -149,22 +148,22 @@ export const camp01Recipe: MapRecipe = {
 			label: 'Supply Exchange'
 		},
 		{
-			id: 'turret-defense-slot',
+			id: 'south-tower-defense-slot',
 			kind: 'defense-slot',
-			grid: { x: 8.5, y: 8 },
+			grid: { x: 9.2, y: 8.7 },
 			label: 'Turret',
-			legacyMarkerId: 'turret-pad',
+			legacyMarkerId: 'south-tower-pad',
 			markerKind: 'build-pad',
 			buildingId: 'turret'
 		},
 		{
-			id: 'trap-defense-slot',
+			id: 'north-tower-defense-slot',
 			kind: 'defense-slot',
-			grid: { x: 6, y: 5 },
-			label: 'Trap',
-			legacyMarkerId: 'trap-pad',
+			grid: { x: 5.1, y: 4.6 },
+			label: 'Turret',
+			legacyMarkerId: 'north-tower-pad',
 			markerKind: 'build-pad',
-			buildingId: 'trap'
+			buildingId: 'turret'
 		},
 		{
 			id: 'worker-hut',
@@ -178,7 +177,7 @@ export const camp01Recipe: MapRecipe = {
 		{
 			id: 'enemy-spawn-east',
 			kind: 'enemy-spawn',
-			grid: { x: 13, y: 6.5 },
+			grid: { x: 14, y: 6.5 },
 			label: 'East Breach'
 		},
 		{
@@ -190,7 +189,7 @@ export const camp01Recipe: MapRecipe = {
 		{
 			id: 'npc-spawn',
 			kind: 'npc-spawn',
-			grid: { x: 7, y: 9 },
+			grid: { x: 7, y: 9.4 },
 			label: 'Camp NPC Spawn'
 		}
 	],
@@ -199,10 +198,10 @@ export const camp01Recipe: MapRecipe = {
 			id: 'east-breach',
 			team: 'enemy',
 			points: [
-				{ x: 13, y: 6.5 },
-				{ x: 11.5, y: 6.5 },
-				{ x: 10, y: 6.5 },
-				{ x: 8.5, y: 6.5 }
+				{ x: 14, y: 6.5 },
+				{ x: 12.5, y: 6.5 },
+				{ x: 11, y: 6.5 },
+				{ x: 9.2, y: 6.5 }
 			]
 		},
 		{

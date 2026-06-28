@@ -77,9 +77,13 @@ export class MapRuntime {
 
 	getResourceStations(): readonly ResourceStationDefinition[] {
 		return this.recipe.anchors
-			.filter((anchor) => anchor.kind === 'wood' || anchor.kind === 'food')
+			.filter((anchor) => (
+				(anchor.kind === 'wood' || anchor.kind === 'food')
+				&& anchor.markerKind === 'resource-station'
+				&& anchor.resource
+			))
 			.map((anchor): ResourceStationDefinition => {
-				const resource = anchor.kind === 'wood' ? 'wood' : 'meat';
+				const resource = anchor.resource ?? (anchor.kind === 'wood' ? 'wood' : 'meat');
 				return {
 					id: anchor.legacyMarkerId ?? anchor.id,
 					resource,

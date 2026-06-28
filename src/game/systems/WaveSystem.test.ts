@@ -14,10 +14,10 @@ describe('WaveSystem', () => {
 			'enemy-spawn-east',
 			'enemy-spawn-north'
 		]);
-		expect(lanes[0].points[0]).toEqual({ x: 13, y: 6.5 });
+		expect(lanes[0].points[0]).toEqual({ x: 14, y: 6.5 });
 
 		lanes[0].points[0].x = 999;
-		expect(waves.getSpawnLanes()[0].points[0]).toEqual({ x: 13, y: 6.5 });
+		expect(waves.getSpawnLanes()[0].points[0]).toEqual({ x: 14, y: 6.5 });
 	});
 
 	it('creates deterministic spawn plans without marker ids', () => {

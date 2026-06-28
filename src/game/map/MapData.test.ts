@@ -23,10 +23,10 @@ describe('snowy camp map data', () => {
 	});
 
 	it('covers the declared map dimensions with terrain', () => {
-		expect(map.width).toBe(14);
-		expect(map.height).toBe(14);
+		expect(map.width).toBe(15);
+		expect(map.height).toBe(15);
 		expect(map.terrain).toHaveLength(map.width * map.height);
-		expect(map.terrain.filter((tile) => tile.kind === 'camp')).toHaveLength(64);
+		expect(map.terrain.filter((tile) => tile.kind === 'camp')).toHaveLength(81);
 	});
 
 	it('uses stable unique IDs for interactive and environment definitions', () => {
@@ -48,8 +48,8 @@ describe('snowy camp map data', () => {
 		expect(blocked.has(gridKey({ x: 0, y: 1 }))).toBe(false);
 		expect(blocked.has(gridKey({ x: 2, y: 3 }))).toBe(true);
 		expect(blocked.has(gridKey({ x: 6.5, y: 3 }))).toBe(false);
-		expect(blocked.has(gridKey({ x: 10, y: 6.5 }))).toBe(false);
-		expect(blocked.has(gridKey({ x: 7, y: 10 }))).toBe(false);
+		expect(blocked.has(gridKey({ x: 11, y: 6.5 }))).toBe(false);
+		expect(blocked.has(gridKey({ x: 7, y: 11 }))).toBe(false);
 		expect(tree?.blockedFootprint).toHaveLength(0);
 		expect(rock?.blockedFootprint).toEqual([{ x: 0, y: 0 }]);
 	});
@@ -59,17 +59,18 @@ describe('snowy camp map data', () => {
 		const eastLane = map.spawnLanes.find((lane) => lane.id === 'east-breach');
 
 		expect(northLane?.points).toContainEqual({ x: 6.5, y: 3 });
-		expect(eastLane?.points).toContainEqual({ x: 10, y: 6.5 });
+		expect(eastLane?.points).toContainEqual({ x: 11, y: 6.5 });
 	});
 
-	it('declares future economy and defense markers without behavior', () => {
+	it('declares resource and build markers for the visible camp layout', () => {
 		expect(map.markers.map((marker) => marker.id)).toEqual([
 			'furnace-pad',
 			'wood-station',
-			'meat-station',
-			'turret-pad',
-			'trap-pad',
+			'south-tower-pad',
+			'north-tower-pad',
 			'worker-hut-pad'
 		]);
+		expect(map.markers.some((marker) => marker.id === 'meat-station')).toBe(false);
+		expect(map.markers.some((marker) => marker.id === 'trap-pad')).toBe(false);
 	});
 });

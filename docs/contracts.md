@@ -64,9 +64,11 @@ such as `getAnchors(kind)`, `requireAnchor(kind)`, `getResourceStations()`,
 marker IDs.
 
 `camp-01` is the compatibility recipe for the original hand-built map. Its
-runtime still emits current marker IDs such as `wood-station`, `meat-station`,
-and `furnace-pad` so existing interaction, rendering, and prompt code can keep
-working while systems migrate to anchor queries.
+runtime still emits marker IDs such as `wood-station` and `furnace-pad` so
+existing interaction, rendering, and prompt code can keep working while systems
+migrate to anchor queries. The required `food` anchor may be gameplay metadata
+only; on `camp-01`, it no longer emits a visible or collectable `meat-station`
+because bear kills and furnace cooking own the food path.
 
 ## Foundation State
 

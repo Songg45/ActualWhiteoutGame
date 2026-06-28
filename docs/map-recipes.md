@@ -28,10 +28,12 @@ Useful optional anchors include `storage`, `exchange`, `build-pad`,
 - Spawn lanes must include at least one point and should be tagged for their
   future consumer, currently `enemy` or `npc`.
 
-`camp-01` lives in `src/game/map/recipes/camp01.ts` and preserves the original
-starter camp layout. It keeps trees pass-through, rocks/fences blocking, the
-current wood/meat station positions, the furnace pad, defense pads, storage,
-exchange, and existing enemy lane paths.
+`camp-01` lives in `src/game/map/recipes/camp01.ts` and preserves the starter
+camp as the compatibility recipe. It keeps trees pass-through, rocks/fences
+blocking, a forest-edge wood station, the furnace pad, two tower defense pads,
+storage, exchange, and existing enemy lane roles. The required `food` anchor is
+retained for customer service/furnace flow, but it intentionally does not emit a
+legacy `meat-station` resource marker.
 
 ## Procedural Generation
 

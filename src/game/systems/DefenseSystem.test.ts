@@ -116,6 +116,34 @@ describe('DefenseSystem', () => {
 		expect(combat.applyDamageToEnemy).toHaveBeenNthCalledWith(2, 'near-bear', 12);
 	});
 
+	it('tracks cooldown separately for distinct completed turret pad ids', () => {
+		const progression: DefenseProgressionPort = {
+			getCompletedDefensePlacements: () => ({
+				turrets: [
+					completed('turret', 'south-tower-pad', 0, 0),
+					completed('turret', 'north-tower-pad', 0, 0)
+				],
+				traps: []
+			})
+		};
+		const combat: DefenseCombatPort = {
+			getCombatTargets: () => [target('near-bear', 80, 0)],
+			applyDamageToEnemy: vi.fn(() => ({ applied: 12, killed: false }))
+		};
+		const system = new DefenseSystem(fakeScene(), progression, { x: 0, y: 0 }, combat, {
+			turretRange: 200,
+			turretDamage: 12,
+			turretCooldownMs: 900
+		});
+
+		system.update(0);
+		system.update(500);
+
+		expect(combat.applyDamageToEnemy).toHaveBeenCalledTimes(2);
+		expect(combat.applyDamageToEnemy).toHaveBeenNthCalledWith(1, 'near-bear', 12);
+		expect(combat.applyDamageToEnemy).toHaveBeenNthCalledWith(2, 'near-bear', 12);
+	});
+
 	it('pulses completed traps against every nearby target on trap cooldown', () => {
 		const progression: DefenseProgressionPort = {
 			getCompletedDefensePlacements: () => ({
