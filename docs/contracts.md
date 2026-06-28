@@ -147,16 +147,15 @@ rules stay consistent across input modes.
 ## NPC Sales
 
 Money comes from customer sales, not direct bear kills. The current PR #17 NPC
-loop is intentionally narrow:
+loop has been replaced by the furnace cooking pass:
 
 - bears and combat provide `meat`
 - NPC customers queue for food/service
-- successful service consumes bounded `meat` and adds `money`
-- insufficient `meat` leaves the queue and resources unchanged
+- successful service consumes bounded prepared/cooked food and adds `money`
+- insufficient prepared food leaves the queue and canonical resources unchanged
 
-This raw-`meat` service is a temporary compatibility step. The next furnace
-cooking pass should introduce a prepared/cooked food output and update customer
-sales to buy that prepared output instead of raw bear meat.
+Raw `meat` remains the canonical bear reward and furnace input. NPC customer
+sales must not directly debit `GameState.meat`.
 
 Worker automation, wall repair, wood fuel, and bear wall damage are separate
 future contracts and should not be mixed into the first NPC sales pass unless
@@ -164,11 +163,9 @@ explicitly requested.
 
 ## Furnace Cooking Direction
 
-The next economy slice should preserve the existing resource types unless a
-small, well-tested cooked-food abstraction is clearly necessary. Acceptable
-approaches include a local furnace prepared-food counter or a typed station
-inventory that does not destabilize `GameState`'s canonical `wood`, `meat`, and
-`money` totals.
+The first furnace cooking pass preserves the existing resource types and uses a
+local furnace prepared-food counter rather than adding cooked food to
+`GameState`'s canonical `wood`, `meat`, and `money` totals.
 
 The required gameplay direction is:
 

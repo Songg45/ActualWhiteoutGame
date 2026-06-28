@@ -36,7 +36,7 @@ const BUILDING_DEFINITIONS_INTERNAL = [
 		label: 'Furnace',
 		description: 'Warms the camp and opens defense construction.',
 		markerVariant: 'furnace',
-		cost: { wood: 8, meat: 2, money: 6 },
+		cost: { wood: 8, meat: 2, money: 0 },
 		constructionMs: 2500,
 		unlocksAfterComplete: ['turret', 'trap'],
 		completedAssetKey: 'building-furnace-camp',

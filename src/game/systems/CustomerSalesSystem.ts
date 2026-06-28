@@ -1,6 +1,7 @@
 import type { GridPoint } from '../map/IsoMath';
 import { normalizeResourceAmount } from '../resources/ResourceTypes';
 import type { GameState } from '../state/GameState';
+import type { PreparedFoodInventory } from './FurnaceCookingSystem';
 import { QueueSystem, type QueueCustomer } from './QueueSystem';
 
 export interface CustomerSalesOptions {
@@ -14,7 +15,7 @@ export type CustomerSaleStatus = 'served' | 'empty-queue' | 'insufficient-food';
 export interface CustomerSaleResult {
 	readonly status: CustomerSaleStatus;
 	readonly customer?: QueueCustomer;
-	readonly consumedMeat: number;
+	readonly consumedPreparedFood: number;
 	readonly paidMoney: number;
 }
 
@@ -25,6 +26,7 @@ export class CustomerSalesSystem {
 
 	constructor(
 		private readonly state: GameState,
+		private readonly preparedFood: PreparedFoodInventory,
 		slotGrids: readonly GridPoint[],
 		options: CustomerSalesOptions = {}
 	) {
@@ -54,36 +56,45 @@ export class CustomerSalesSystem {
 		if (!next) {
 			return {
 				status: 'empty-queue',
-				consumedMeat: 0,
+				consumedPreparedFood: 0,
 				paidMoney: 0
 			};
 		}
-		if (this.state.snapshot.resources.meat < this.foodPerSale) {
+		if (this.preparedFood.preparedFood < this.foodPerSale) {
 			return {
 				status: 'insufficient-food',
 				customer: next,
-				consumedMeat: 0,
+				consumedPreparedFood: 0,
 				paidMoney: 0
 			};
 		}
 
-		const consumedMeat = this.state.changeResource('meat', -this.foodPerSale);
-		if (consumedMeat !== -this.foodPerSale) {
-			return {
-				status: 'insufficient-food',
-				customer: next,
-				consumedMeat: 0,
-				paidMoney: 0
-			};
+		const previousMoney = this.state.snapshot.resources.money;
+		let paidMoney = 0;
+		try {
+			paidMoney = this.state.changeResource('money', this.moneyPerSale);
+		} catch (error) {
+			paidMoney = this.state.snapshot.resources.money - previousMoney;
+			if (paidMoney !== this.moneyPerSale) {
+				throw error;
+			}
 		}
-
-		const paidMoney = this.state.changeResource('money', this.moneyPerSale);
 		if (paidMoney !== this.moneyPerSale) {
-			this.state.changeResource('meat', this.foodPerSale);
 			return {
 				status: 'insufficient-food',
 				customer: next,
-				consumedMeat: 0,
+				consumedPreparedFood: 0,
+				paidMoney: 0
+			};
+		}
+
+		const consumedPreparedFood = this.preparedFood.consumePreparedFood(this.foodPerSale);
+		if (consumedPreparedFood !== this.foodPerSale) {
+			this.state.changeResource('money', -paidMoney);
+			return {
+				status: 'insufficient-food',
+				customer: next,
+				consumedPreparedFood: 0,
 				paidMoney: 0
 			};
 		}
@@ -91,7 +102,7 @@ export class CustomerSalesSystem {
 		return {
 			status: 'served',
 			customer: this.queue.serveNext(),
-			consumedMeat: this.foodPerSale,
+			consumedPreparedFood: this.foodPerSale,
 			paidMoney
 		};
 	}

@@ -211,11 +211,21 @@ Use this file to record branch reviews, merges, rejected PRs, and cross-agent co
 - Worker automation, wall damage/repair, wood fuel, and full cooking remain
   deferred.
 
-## Next Planned Slice
+## Remaining Deferred Slices
 
-- Add a narrow furnace cooking pass so NPC customers buy prepared/cooked food
-  instead of raw bear meat.
-- Preserve bear meat rewards, Agent 8 defenses, Agent 6 queue behavior, and
-  player desktop/mobile controls.
-- Defer wood-as-furnace-fuel, wood-for-wall-repair, bear wall damage, worker
-  automation, procedural maps, and broad resource-type redesign.
+- Wood-as-furnace-fuel, wood-for-wall-repair, bear wall damage, worker
+  automation, procedural maps, and broad resource-type redesign remain out of
+  scope for the first furnace cooking branch.
+
+## 2026-06-27 - Furnace Cooking Branch Checkpoint
+
+- Branch: `codex/furnace-cooking`
+- Added a narrow local furnace prepared-food counter that consumes canonical
+  `GameState.meat` over time after the furnace is completed.
+- Updated NPC customer sales to consume prepared food instead of raw
+  `GameState.meat`; insufficient prepared food leaves the queue and canonical
+  resources unchanged.
+- Preserved canonical resource totals as `wood`, `meat`, and `money`; cooked
+  food is intentionally local furnace inventory, not a new global resource.
+- Deferred wood fuel, worker automation, wall damage/repair, procedural maps,
+  and broad resource architecture changes.
