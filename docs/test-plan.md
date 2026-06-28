@@ -19,14 +19,15 @@
 
 ## Defense Smoke
 
-- Complete the furnace, then complete the turret pad; start a bear wave and verify the turret fires visible bolts at nearby bears.
-- Verify turret damage has a cooldown by confirming a bear is not damaged every frame while inside range.
-- Complete the trap pad; lure bears near it and verify the trap pulse damages bears in its area without changing player movement or attack input.
+- Complete the furnace, then complete each visible tower pad; start a bear wave and verify both towers fire visible bolts at nearby bears.
+- Verify tower damage has a cooldown by confirming a bear is not damaged every frame while inside range.
+- Confirm no trap pad appears in `camp-01`; trap behavior remains covered by automated defense tests for future maps.
 - Kill a bear with defense damage and verify the reward is still meat/food, not direct money.
 
 ## NPC Sales Smoke
 
 - Wait for blue customer NPCs to spawn from the camp NPC anchor and queue near the exchange/food area without blocking player movement.
+- Confirm there is no visible or collectable `meat-station`; bear kills are the meat source.
 - Complete the furnace and verify raw `meat` in `GameState` cooks into the furnace's prepared-food count over time.
 - With prepared food available, verify the head customer is served, one prepared food is consumed, money increases, and the customer walks away.
 - With no prepared food available, verify the head customer remains queued and raw `meat`, prepared food, and money do not become negative or non-finite.

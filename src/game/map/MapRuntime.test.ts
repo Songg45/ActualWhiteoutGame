@@ -11,6 +11,7 @@ describe('MapRuntime', () => {
 
 		expect(furnace.id).toBe('furnace');
 		expect(runtime.getAnchor('wood')?.legacyMarkerId).toBe('wood-station');
+		expect(runtime.requireAnchor('food').legacyMarkerId).toBeUndefined();
 		expect(runtime.getAnchors('enemy-spawn')).toHaveLength(2);
 		furnace.grid.x = 999;
 		expect(runtime.requireAnchor('furnace').grid.x).toBe(7);
@@ -20,14 +21,12 @@ describe('MapRuntime', () => {
 		expect(runtime.data.markers.map((marker) => marker.id)).toEqual([
 			'furnace-pad',
 			'wood-station',
-			'meat-station',
-			'turret-pad',
-			'trap-pad',
+			'south-tower-pad',
+			'north-tower-pad',
 			'worker-hut-pad'
 		]);
 		expect(runtime.getResourceStations().map((station) => station.id)).toEqual([
-			'wood-station',
-			'meat-station'
+			'wood-station'
 		]);
 		expect(runtime.getDropZones().map((zone) => zone.id)).toEqual([
 			'camp-storage',
@@ -36,8 +35,14 @@ describe('MapRuntime', () => {
 		expect(runtime.getBuildPads().map((anchor) => anchor.buildingId)).toEqual([
 			'furnace',
 			'turret',
-			'trap',
+			'turret',
 			'worker-hut'
+		]);
+		expect(runtime.getBuildPads().map((anchor) => anchor.legacyMarkerId)).toEqual([
+			'furnace-pad',
+			'south-tower-pad',
+			'north-tower-pad',
+			'worker-hut-pad'
 		]);
 	});
 

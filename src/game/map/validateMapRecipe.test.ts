@@ -81,7 +81,12 @@ describe('MapRecipe validation', () => {
 		const result = validateMapRecipe(recipe({
 			anchors: camp01Recipe.anchors.map((anchor) => (
 				anchor.id === 'food'
-					? { ...anchor, legacyMarkerId: 'wood-station' }
+					? {
+						...anchor,
+						legacyMarkerId: 'wood-station',
+						markerKind: 'resource-station',
+						resource: 'meat'
+					}
 					: anchor
 			))
 		}));

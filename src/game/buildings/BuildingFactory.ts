@@ -1,14 +1,30 @@
 import type Phaser from 'phaser';
 import type { GameEventBus } from '../events/GameEvents';
 import type { BuiltMap } from '../map/MapBuilder';
+import type { GameplayAnchor } from '../map/GameplayAnchor';
 import type { MapMarker } from '../map/MapData';
 import { BuildPad } from './BuildPad';
 import {
 	BUILDING_DEFINITIONS,
 	INITIAL_UNLOCKED_BUILDINGS,
 	getBuildingDefinitionByPadId,
+	type BuildingDefinition,
 	type BuildingId
 } from './BuildingTypes';
+
+function resolveAnchorBuildingDefinition(anchor: GameplayAnchor): BuildingDefinition {
+	const baseDefinition = anchor.buildingId
+		? BUILDING_DEFINITIONS.find((candidate) => candidate.id === anchor.buildingId)
+		: getBuildingDefinitionByPadId(anchor.legacyMarkerId ?? anchor.id);
+	if (!baseDefinition) {
+		throw new Error(`No building definition found for anchor ${anchor.id}.`);
+	}
+	return {
+		...baseDefinition,
+		padId: anchor.legacyMarkerId ?? anchor.id,
+		label: anchor.label ?? baseDefinition.label
+	};
+}
 
 export function createBuildPads(
 	scene: Phaser.Scene,
@@ -18,12 +34,7 @@ export function createBuildPads(
 	const padAnchors = map.runtime?.getBuildPads();
 	if (padAnchors) {
 		return padAnchors.map((anchor) => {
-			const definition = anchor.buildingId
-				? BUILDING_DEFINITIONS.find((candidate) => candidate.id === anchor.buildingId)
-				: getBuildingDefinitionByPadId(anchor.legacyMarkerId ?? anchor.id);
-			if (!definition) {
-				throw new Error(`No building definition found for anchor ${anchor.id}.`);
-			}
+			const definition = resolveAnchorBuildingDefinition(anchor);
 			return new BuildPad(
 				scene,
 				definition,
